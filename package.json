@@ -1,0 +1,21 @@
+{
+  "name": "jesus-cli",
+  "version": "0.1.0",
+  "description": "Read the Bible in your terminal with a Node.js CLI.",
+  "type": "module",
+  "bin": {
+    "Jesus": "./src/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/cli.js"
+  },
+  "files": [
+    "src",
+    "data",
+    "README.md"
+  ]
+}
