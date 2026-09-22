@@ -1,5 +1,5 @@
 {
-  "name": "jesus-cli",
+  "name": "Jesus-cli",
   "version": "0.1.0",
   "description": "Read the Bible in your terminal with a Node.js CLI.",
   "type": "module",
