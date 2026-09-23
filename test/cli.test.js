@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawnSync, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const cliPath = fileURLToPath(new URL("../src/cli.js", import.meta.url));
@@ -52,4 +52,75 @@ test("unknown commands fail with exit code 1", () => {
   assert.equal(result.status, 1);
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /Unknown command: nope/);
+});
+
+test("search caps results at 50 in canonical order", () => {
+  const result = runCli("search", "the");
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  const lines = result.stdout.trim().split("\n");
+  assert.equal(lines.length, 50);
+  assert.match(lines[0], /^Genesis 1:1 - /);
+});
+
+test("search prints matching verses in canonical order", () => {
+  const result = runCli("search", "love one another");
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  const lines = result.stdout.trim().split("\n");
+  assert.ok(lines.length >= 1);
+  assert.match(lines[0], /^John 13:34 - /);
+});
+
+test("search with no hits exits 0 and prints a message", () => {
+  const result = runCli("search", "zzzzzzzzzz");
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  assert.equal(result.stdout, 'No results for "zzzzzzzzzz"\n');
+});
+
+test("search with no query fails with exit code 1", () => {
+  const result = runCli("search");
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /Usage: Jesus search/);
+});
+
+test("random prints a single verse and varies per run", () => {
+  const one = runCli("random");
+  const two = runCli("random");
+  assert.equal(one.status, 0);
+  assert.equal(one.stderr, "");
+  assert.match(one.stdout, /^[A-Za-z0-9 ]+ \d+:\d+ - .* \(KJV\)\n$/);
+  assert.notEqual(one.stdout, two.stdout);
+});
+
+test("today is stable within a day and exits 0", () => {
+  const one = runCli("today");
+  const two = runCli("today");
+  assert.equal(one.status, 0);
+  assert.equal(one.stderr, "");
+  assert.match(one.stdout, /^[A-Za-z0-9 ]+ \d+:\d+ - .* \(KJV\)\n$/);
+  assert.equal(one.stdout, two.stdout);
+});
+
+test("--version prints a semver", () => {
+  const result = runCli("--version");
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout.trim(), /^Jesus CLI \d+\.\d+\.\d+$/);
+});
+
+test("--help prints usage to stdout", () => {
+  const result = runCli("--help");
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout, /^Usage: Jesus <command>/);
+});
+
+test("search tolerates an early-closing pipe", () => {
+  const command = `"${process.execPath}" "${cliPath}" search the | head -1`;
+  const output = execSync(command, { encoding: "utf8", shell: "/bin/sh" });
+  assert.match(output, /^Genesis 1:1 - /);
+  assert.doesNotMatch(output, /EPIPE/);
 });

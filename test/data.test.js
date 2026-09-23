@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { BOOKS, getBook, normalizeBook } from "../src/data/books.js";
-import { loadKjv, getChapter, getVerses } from "../src/data/kjv.js";
+import { loadKjv, getChapter, getVerses, randomVerse, search, verseOfTheDay } from "../src/data/kjv.js";
 import { parseReference } from "../src/data/reference.js";
 
 test("contains the 66 canonical books", () => {
@@ -78,4 +78,44 @@ test("rejects verse ranges beyond the chapter", async () => {
     getVerses(parseReference("John 3:99")),
     { name: "VerseNotFoundError" }
   );
+});
+
+test("searches case-insensitively in canonical order", async () => {
+  const results = await search("FOR GOD SO LOVED");
+  assert.ok(results.length >= 1);
+  const hit = results.find((entry) => entry.book === "John" && entry.chapter === 3 && entry.verse === 16);
+  assert.match(hit.text, /For God so loved the world/);
+});
+
+test("caps search at 50 results, starting at Genesis 1:1", async () => {
+  const results = await search("the");
+  assert.equal(results.length, 50);
+  assert.deepEqual(
+    { book: results[0].book, chapter: results[0].chapter, verse: results[0].verse },
+    { book: "Genesis", chapter: 1, verse: 1 }
+  );
+});
+
+test("randomVerse returns real verses and varies across runs", async () => {
+  const seen = new Set();
+  for (let i = 0; i < 8; i += 1) {
+    const verse = await randomVerse();
+    assert.ok(verse.text.length > 0);
+    assert.ok(seen.size >= 0);
+    seen.add(`${verse.book} ${verse.chapter}:${verse.verse}`);
+  }
+  assert.ok(seen.size > 1, "expected variation across randomVerse runs");
+});
+
+test("verseOfTheDay is stable per date and varies across days", async () => {
+  const morning = await verseOfTheDay(new Date("2026-09-23T10:00:00Z"));
+  const evening = await verseOfTheDay(new Date("2026-09-23T23:59:00Z"));
+  assert.deepEqual(morning, evening);
+
+  const days = [];
+  for (let d = 0; d < 10; d += 1) {
+    const verse = await verseOfTheDay(new Date(`2026-09-2${d}T12:00:00Z`));
+    days.push(`${verse.book} ${verse.chapter}:${verse.verse}`);
+  }
+  assert.ok(new Set(days).size > 1, "expected different verses across days");
 });
