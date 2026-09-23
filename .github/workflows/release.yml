@@ -33,6 +33,7 @@ jobs:
           files: Jesus-cli-*.tgz
 
   publish-npm:
+    if: vars.PUBLISH_TO_NPM == 'true'
     needs: verify
     runs-on: ubuntu-latest
     steps:
