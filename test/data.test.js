@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BOOKS, getBook, normalizeBook } from "../src/data/books.js";
+import { BOOKS, getBook, getBookByBollsId, normalizeBook } from "../src/data/books.js";
 import { loadKjv, getChapter, getVerses, randomVerse, search, verseOfTheDay } from "../src/data/kjv.js";
 import { parseReference } from "../src/data/reference.js";
 
@@ -18,6 +18,12 @@ test("exposes bollsId and chapter counts for every book", () => {
   assert.equal(getBook("Genesis").chapters, 50);
   assert.equal(getBook("Psalms").chapters, 150);
   assert.equal(getBook("Obadiah").chapters, 1);
+});
+
+test("maps bolls ids back to books", () => {
+  assert.equal(getBookByBollsId(19).name, "Psalms");
+  assert.equal(getBookByBollsId(66).name, "Revelation");
+  assert.equal(getBookByBollsId(999), null);
 });
 
 test("parses chapter and verse references", () => {

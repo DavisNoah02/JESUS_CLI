@@ -99,3 +99,7 @@ export function getBook(value) {
 export function normalizeBook(value) {
   return getBook(value).name;
 }
+
+export function getBookByBollsId(bollsId) {
+  return BOOKS.find((book) => book.bollsId === bollsId) ?? null;
+}
