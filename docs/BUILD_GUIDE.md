@@ -8,21 +8,23 @@ This project is a Node.js/ESM rebuild of the original Rust `christ-cli` idea. Th
 
 ## Current status
 
-The project is currently at the plain-text CLI milestone:
+The project is at the plain-text CLI milestone with local state and an on-disk translation cache:
 
 - `read` works
 - `search` works
 - `random` works
-- `today` works
+- `today` works (deterministic per date)
 - `--help` and `--version` work
-- the TUI and translation download layers are not yet implemented
+- additional translations resolve via the Bolls API at bolls.life
+- local state persists in `<dataDir>/jesus-cli/state.json`
+- fetched chapters cache to `<dataDir>/jesus-cli/translations/<TRANSLATION>/`
+- the TUI, downloader, and translation-picker layers are not yet implemented
 
 ## Local development
 
 From the project root:
 
 ```bash
-cd /home/neo/Projects/JESUS_CLI/node
 npm install
 npm test
 ```
@@ -62,13 +64,17 @@ Jesus --version
 - KJV lookup
 - read command
 - search, random, today
+- Bolls API client (`getChapter`, `getVerse`, `getRandomVerse`, `search`, `getVerseRange` deferred)
+- resolver facade (KJV local, other translations via network/cache)
+- state persistence (`state.json`)
+- on-disk translation cache (atomic writes, corrupt-safe)
 
 ### Planned
 
-- Bolls API integration
-- cache and state persistence
-- translation selector
+- translation selector / install management
+- background downloader
 - TUI with blessed
+- themes and navigation panels
 - packaging and publishing
 
 ## Architecture notes
@@ -76,13 +82,35 @@ Jesus --version
 The overall flow is:
 
 - CLI
-- data layer
-- KJV source
-- optional API fallback
-- later TUI and state layers
+- resolver facade (`src/api/resolver.js`)
+  - KJV source (bundled, offline)
+  - Bolls API (`src/api/bolls.js`) for other translations
+  - disk cache (`src/store/cache.js`) checked before the API, written through after a fetch
+- state layer (`src/store/state.js`) for persistent settings
+- later TUI, downloader, and translation-picker layers
+
+### Cache layout
+
+```
+<dataDir>/jesus-cli/translations/<TRANSLATION>/
+  .complete
+  books.json
+  <bollsId>_<chapter>.json
+```
+
+- `dataDir` defaults per platform: Linux/macOS `~/.local/share`, Windows `%LOCALAPPDATA%`; override with `XDG_DATA_HOME`.
+- Chapter files are written atomically (`*.tmp` then `rename`).
+- Only files matching `/^\d+_\d+\.json$/` count as cached chapters; `books.json`, `.complete`, and stray temp files never trigger a cache hit.
+- Detection is a deliberate fix over the Rust original, which conflated `books.json`/`.complete` with real chapters.
+- A corrupt or non-array chapter file is treated as a cache miss, not a crash (and is refetched).
+- The `.complete` marker asserts a whole translation is mirrored; a missing chapter under a `.complete` marker clears the marker on next read.
 
 ## Notes
 
 - No runtime dependencies are used in the current plain-text CLI milestone.
 - The Node project remains intentionally minimal until the TUI milestone.
 - The Rust implementation remains reference material only.
+- Known deviations from the Rust original:
+  - `today` is deterministic per calendar date rather than time-of-day based.
+  - Bolls has no verse-range endpoint, so ranges resolve by fetching the chapter and filtering.
+  - WEB (and translations with deuterocanonical books) return bolls ids above 66; `getBookByBollsId` falls back to `#<id>` where the book catalog has no match.

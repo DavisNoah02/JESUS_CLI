@@ -12,10 +12,11 @@ Built with Node.js + ESM. Works offline with bundled KJV data. Planned to grow t
 npm install -g jesus-cli
 ```
 
-Or from a local checkout:
+Or from a local checkout (repo root):
 
 ```bash
-cd /home/neo/Projects/JESUS_CLI/node
+cd /home/neo/Projects/JESUS_CLI
+npm install
 npm link
 ```
 
@@ -71,24 +72,26 @@ Jesus --version
 
 ## Current status
 
-This project is currently in the plain-text CLI phase.
+This project is currently in the plain-text CLI phase with local state and a translation cache.
 
 Working today:
 
 - `read` for single verse, verse range, and whole chapter
 - `search` for KJV text lookup
 - `random` verse selection
-- `today` verse selection
+- `today` verse selection (deterministic per date)
 - `--help` and `--version`
 - bundled KJV data with offline reads
 - canonical 66-book recognition and common aliases
+- additional translations (WEB, etc.) via the Bolls API at bolls.life
+- local state persistence (`state.json` in the per-platform data dir)
+- on-disk translation cache with atomic writes, served before the network
 
 Planned next:
 
-- translation fallback via Bolls API
-- local cache and state persistence
 - interactive terminal UI
 - themes and navigation panels
+- translation picker and install management
 - full terminal browser experience
 - publication and packaging polish
 
@@ -98,6 +101,8 @@ Planned next:
 - Fast terminal-reading workflow
 - Forgiving reference parsing
 - Canonical book resolution and aliases
+- Additional translations via the Bolls API
+- Persistent local state and an on-disk translation cache (atomic writes, corrupt files treated as uncached)
 - Zero-runtime-dependency core for the current CLI milestone
 - Plain-text output suitable for pipes and scripting
 
@@ -107,16 +112,16 @@ Planned next:
 - JavaScript / ESM
 - bundled KJV JSON
 - Node test runner
+- Bolls.life API for additional translations
 - future TUI via `blessed` once the CLI foundation is fully stabilized
-- future API fallback via Bolls.life for additional translations
 
 ## Roadmap
 
 - Milestone 1 — core data layer + `read` — complete
 - Milestone 2 — `search`, `random`, `today` — complete
-- Milestone 3 — Bolls API integration — planned
-- Milestone 4 — state persistence — planned
-- Milestone 5 — cache system — planned
+- Milestone 3 — Bolls API integration — complete
+- Milestone 4 — state persistence — complete
+- Milestone 5 — cache system — complete
 - Milestone 6+ — TUI, translation picker, themes, package polish — planned
 
 ## License

@@ -6,6 +6,15 @@ import {
   search as searchKjv
 } from "../data/kjv.js";
 import { VerseNotFoundError } from "../errors.js";
+import {
+  hasCachedData,
+  isFullyCached,
+  loadChapter,
+  removeCompleteMarker,
+  saveChapter,
+  search as searchCache
+} from "../store/cache.js";
+import { defaultDataDir } from "../store/state.js";
 import * as bolls from "./bolls.js";
 
 const MAX_SEARCH_RESULTS = 50;
@@ -37,7 +46,7 @@ function mapBollsSearchResult(entry) {
   };
 }
 
-export async function getChapter(book, chapter, translation = "KJV") {
+export async function getChapter(book, chapter, translation = "KJV", options = {}) {
   const bookInfo = resolveBook(book);
 
   if (isKjv(translation)) {
@@ -45,12 +54,21 @@ export async function getChapter(book, chapter, translation = "KJV") {
   }
 
   assertChapterBounds(bookInfo, chapter);
+
+  const cached = await loadChapter(translation, bookInfo.bollsId, chapter, options);
+  if (cached) return cached;
+
+  if (await isFullyCached(translation, options)) {
+    await removeCompleteMarker(translation, options);
+  }
+
   const verses = await bolls.getChapter(translation, bookInfo.bollsId, chapter);
   if (verses.length === 0) {
     throw new VerseNotFoundError(
       `Chapter not found: ${bookInfo.name} ${chapter} (${translation})`
     );
   }
+  await saveChapter(translation, bookInfo.bollsId, chapter, verses, options);
   return verses;
 }
 
@@ -59,7 +77,8 @@ export async function getVerses(
   chapter,
   verseStart = null,
   verseEnd = null,
-  translation = "KJV"
+  translation = "KJV",
+  options = {}
 ) {
   const bookInfo = resolveBook(book);
 
@@ -67,7 +86,7 @@ export async function getVerses(
     return getKjvVerses({ book: bookInfo.name, chapter, verseStart, verseEnd });
   }
 
-  const chapterVerses = await getChapter(bookInfo.name, chapter, translation);
+  const chapterVerses = await getChapter(bookInfo.name, chapter, translation, options);
   const start = verseStart ?? 1;
   const end = verseEnd ?? chapterVerses.length;
   const range = chapterVerses.filter((verse) => verse.verse >= start && verse.verse <= end);
@@ -81,22 +100,26 @@ export async function getVerses(
   return range;
 }
 
-export function getVerse(book, chapter, verse, translation = "KJV") {
-  return getVerses(book, chapter, verse, verse, translation).then(
+export function getVerse(book, chapter, verse, translation = "KJV", options = {}) {
+  return getVerses(book, chapter, verse, verse, translation, options).then(
     (verses) => verses[0]
   );
 }
 
-export function getVerseRange(book, chapter, verseStart, verseEnd, translation = "KJV") {
-  return getVerses(book, chapter, verseStart, verseEnd, translation);
+export function getVerseRange(book, chapter, verseStart, verseEnd, translation = "KJV", options = {}) {
+  return getVerses(book, chapter, verseStart, verseEnd, translation, options);
 }
 
-export async function search(query, translation = "KJV") {
+export async function search(query, translation = "KJV", options = {}) {
   const needle = String(query ?? "").trim();
   if (!needle) return [];
 
   if (isKjv(translation)) {
     return searchKjv(needle, MAX_SEARCH_RESULTS);
+  }
+
+  if (await hasCachedData(translation, options)) {
+    return (await searchCache(translation, needle, options)).slice(0, MAX_SEARCH_RESULTS);
   }
 
   const results = await bolls.search(translation, needle);
