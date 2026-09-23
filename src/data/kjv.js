@@ -31,7 +31,17 @@ export async function getChapter(bookValue, chapterNumber) {
   }));
 }
 
-export async function getVerses(reference) {
+export async function getVerses(referenceOrBook, chapterNumber, verseStart, verseEnd) {
+  const reference =
+    typeof referenceOrBook === "object" && referenceOrBook !== null
+      ? referenceOrBook
+      : {
+          book: referenceOrBook,
+          chapter: chapterNumber,
+          verseStart,
+          verseEnd
+        };
+
   const chapter = await getChapter(reference.book, reference.chapter);
   const start = reference.verseStart ?? 1;
   const end = reference.verseEnd ?? chapter.length;

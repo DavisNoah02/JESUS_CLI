@@ -1,5 +1,5 @@
 import { ReferenceParseError } from "../errors.js";
-import { BOOKS, normalizeBook } from "./books.js";
+import { BOOKS, getBook } from "./books.js";
 
 const bookPattern = BOOKS.map((book) => [book.name, ...book.aliases])
   .flat()
@@ -20,16 +20,24 @@ export function parseReference(value) {
   }
 
   const [, bookValue, chapterValue, verseStartValue, verseEndValue] = match;
+  const book = getBook(bookValue);
+  const chapter = Number(chapterValue);
   const verseStart = verseStartValue ? Number(verseStartValue) : null;
   const verseEnd = verseEndValue ? Number(verseEndValue) : verseStart;
+
+  if (chapter < 1 || chapter > book.chapters) {
+    throw new ReferenceParseError(
+      `${book.name} has ${book.chapters} chapter${book.chapters === 1 ? "" : "s"}, but chapter ${chapter} was requested`
+    );
+  }
 
   if (verseEnd !== null && verseEnd < verseStart) {
     throw new ReferenceParseError(`Invalid verse range: ${value}`);
   }
 
   return {
-    book: normalizeBook(bookValue),
-    chapter: Number(chapterValue),
+    book: book.name,
+    chapter,
     verseStart,
     verseEnd
   };
