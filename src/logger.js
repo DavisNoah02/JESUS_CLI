@@ -1,3 +1,5 @@
+import { paint, shouldUseColor } from "./theme.js";
+
 function onPipeError(error) {
   if (error?.code === "EPIPE") {
     process.exit(0);
@@ -13,5 +15,6 @@ export function printResult(value) {
 }
 
   export function printError(value) {
-    process.stderr.write(`${value}\n`);
+    const styled = paint(value, "error", { enabled: shouldUseColor({ stream: process.stderr }) });
+    process.stderr.write(`${styled}\n`);
   }

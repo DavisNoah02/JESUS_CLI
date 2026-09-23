@@ -5,6 +5,8 @@ import { UsageError } from "./errors.js";
 import { parseReference } from "./data/reference.js";
 import { getVerses, randomVerse, search, verseOfTheDay } from "./data/kjv.js";
 import { version } from "./version.js";
+import { load as loadState } from "./store/state.js";
+import { paint } from "./theme.js";
 
 const [command, ...args] = process.argv.slice(2);
 
@@ -18,11 +20,13 @@ Commands:
   --version          Print the version
   --help             Show this help`;
 
-function printVerse({ book, chapter, verse, text }) {
-  printResult(`${book} ${chapter}:${verse} - ${text} (KJV)`);
+function printVerse({ book, chapter, verse, text }, theme) {
+  const reference = paint(`${book} ${chapter}:${verse}`, "ref", { theme });
+  const versionNote = paint("(KJV)", "muted", { theme });
+  printResult(`${reference} - ${text} ${versionNote}`);
 }
 
-async function read(referenceValue) {
+async function read(referenceValue, theme) {
   if (!referenceValue) {
     throw new UsageError(`Usage: Jesus read <reference>  (e.g. Jesus read "John 3:16")`);
   }
@@ -31,36 +35,37 @@ async function read(referenceValue) {
   const verses = await getVerses(reference);
 
   for (const verse of verses) {
-    printVerse({ book: reference.book, chapter: reference.chapter, ...verse });
+    printVerse({ book: reference.book, chapter: reference.chapter, ...verse }, theme);
   }
 }
 
-async function searchCommand(query) {
+async function searchCommand(query, theme) {
   if (!query) {
     throw new UsageError(`Usage: Jesus search <query>  (e.g. Jesus search "love one another")`);
   }
 
   const results = await search(query);
   if (results.length === 0) {
-    printResult(`No results for "${query}"`);
+    printResult(paint(`No results for "${query}"`, "muted", { theme }));
     return;
   }
 
   for (const verse of results) {
-    printVerse(verse);
+    printVerse(verse, theme);
   }
 }
 
 async function main() {
+  const theme = (await loadState()).theme;
   switch (command) {
     case "read":
-      return read(args.join(" ").trim());
+      return read(args.join(" ").trim(), theme);
     case "search":
-      return searchCommand(args.join(" ").trim());
+      return searchCommand(args.join(" ").trim(), theme);
     case "random":
-      return printVerse(await randomVerse());
+      return printVerse(await randomVerse(), theme);
     case "today":
-      return printVerse(await verseOfTheDay());
+      return printVerse(await verseOfTheDay(), theme);
     case "--version":
     case "-V":
       return printResult(`Jesus CLI ${version()}`);

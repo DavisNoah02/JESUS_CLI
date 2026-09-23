@@ -18,6 +18,7 @@ The project is at the plain-text CLI milestone with local state and an on-disk t
 - additional translations resolve via the Bolls API at bolls.life
 - local state persists in `<dataDir>/jesus-cli/state.json`
 - fetched chapters cache to `<dataDir>/jesus-cli/translations/<TRANSLATION>/`
+- themed output (state-driven theme, `NO_COLOR` aware, plain when piped)
 - the TUI, downloader, and translation-picker layers are not yet implemented
 
 ## Local development
@@ -68,13 +69,14 @@ Jesus --version
 - resolver facade (KJV local, other translations via network/cache)
 - state persistence (`state.json`)
 - on-disk translation cache (atomic writes, corrupt-safe)
+- theme layer (ANSI palettes, `NO_COLOR` aware, plain when piped)
 
 ### Planned
 
 - translation selector / install management
 - background downloader
 - TUI with blessed
-- themes and navigation panels
+- navigation panels
 - packaging and publishing
 
 ## Architecture notes
@@ -82,6 +84,7 @@ Jesus --version
 The overall flow is:
 
 - CLI
+- theme layer (`src/theme.js`) — ANSI palettes keyed by state's `theme`; colors only when the stream is a TTY and `NO_COLOR`/`TERM=dumb` are absent
 - resolver facade (`src/api/resolver.js`)
   - KJV source (bundled, offline)
   - Bolls API (`src/api/bolls.js`) for other translations

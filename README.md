@@ -86,6 +86,7 @@ Working today:
 - additional translations (WEB, etc.) via the Bolls API at bolls.life
 - local state persistence (`state.json` in the per-platform data dir)
 - on-disk translation cache with atomic writes, served before the network
+- themed terminal output (state-driven theme, respects `NO_COLOR`, plain when piped)
 
 Planned next:
 
@@ -103,6 +104,7 @@ Planned next:
 - Canonical book resolution and aliases
 - Additional translations via the Bolls API
 - Persistent local state and an on-disk translation cache (atomic writes, corrupt files treated as uncached)
+- Themed terminal output (state-driven theme, `NO_COLOR` aware, plain when piped)
 - Zero-runtime-dependency core for the current CLI milestone
 - Plain-text output suitable for pipes and scripting
 
@@ -122,7 +124,8 @@ Planned next:
 - Milestone 3 — Bolls API integration — complete
 - Milestone 4 — state persistence — complete
 - Milestone 5 — cache system — complete
-- Milestone 6+ — TUI, translation picker, themes, package polish — planned
+- Milestone 6 — themes — complete
+- Milestone 7+ — TUI, translation picker, package polish — planned
 
 ## License
 
