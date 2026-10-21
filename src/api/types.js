@@ -31,10 +31,37 @@
 
 /**
  * @typedef {object} RandomVerse
- * @property {string} book canonical book name
+ * @property {string} book canonical English name
  * @property {number} chapter
  * @property {number} verse
  * @property {string} text
+ */
+
+/**
+ * @typedef {object} ResolverOptions
+ * @property {number} [limit] maximum number of results for a search
+ * @property {(message: string) => void} [onWarn] called when the resolver
+ *   substitutes a fallback, so the CLI can report it on stderr
+ */
+
+/**
+ * @typedef {object} ParsedArgs
+ * @property {string|undefined} command
+ * @property {string[]} positionals
+ * @property {Record<string, string|true>} flags
+ */
+
+/**
+ * @typedef {object} CommandContext
+ * @property {object} state persisted settings
+ * @property {string} statePath path of the state file
+ * @property {string[]} positionals
+ * @property {Record<string, string|true>} flags
+ * @property {string} translation resolved translation code
+ * @property {string} theme resolved theme name
+ * @property {number|undefined} limit maximum number of search results
+ * @property {boolean} colorEnabled
+ * @property {ResolverOptions} options
  */
 
 export {};

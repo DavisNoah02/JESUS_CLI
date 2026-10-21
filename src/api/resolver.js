@@ -3,15 +3,31 @@ import {
   getChapter as getKjvChapter,
   getVerses as getKjvVerses,
   randomVerse as getKjvRandomVerse,
-  search as searchKjv
+  search as searchKjv,
+  verseOfTheDay as getKjvVerseOfTheDay
 } from "../data/kjv.js";
-import { VerseNotFoundError } from "../errors.js";
+import { UnsupportedTranslationError, VerseNotFoundError } from "../errors.js";
+import {
+  hasCachedData,
+  isFullyCached,
+  loadChapter,
+  removeCompleteMarker,
+  saveChapter,
+  search as searchCache
+} from "../store/cache.js";
 import * as bolls from "./bolls.js";
+import { isSupportedTranslation, normalizeTranslation } from "./translations.js";
 
 const MAX_SEARCH_RESULTS = 50;
 
 export function isKjv(translation) {
-  return String(translation).toUpperCase() === "KJV";
+  return normalizeTranslation(translation) === "KJV";
+}
+
+function warn(options, message) {
+  if (typeof options?.onWarn === "function") {
+    options.onWarn(message);
+  }
 }
 
 function resolveBook(book) {
@@ -37,20 +53,35 @@ function mapBollsSearchResult(entry) {
   };
 }
 
-export async function getChapter(book, chapter, translation = "KJV") {
+export async function getChapter(book, chapter, translation = "KJV", options = {}) {
   const bookInfo = resolveBook(book);
+  const code = normalizeTranslation(translation);
 
-  if (isKjv(translation)) {
+  if (isKjv(code)) {
     return getKjvChapter(bookInfo.name, chapter);
   }
 
   assertChapterBounds(bookInfo, chapter);
-  const verses = await bolls.getChapter(translation, bookInfo.bollsId, chapter);
+
+  const cached = await loadChapter(code, bookInfo.bollsId, chapter, options);
+  if (cached) return cached;
+
+  if (await isFullyCached(code, options)) {
+    await removeCompleteMarker(code, options);
+  }
+
+  const verses = await bolls.getChapter(code, bookInfo.bollsId, chapter);
   if (verses.length === 0) {
+    if (!isSupportedTranslation(code)) {
+      throw new UnsupportedTranslationError(
+        `Unknown translation: ${code}. bolls.life does not serve it.`
+      );
+    }
     throw new VerseNotFoundError(
-      `Chapter not found: ${bookInfo.name} ${chapter} (${translation})`
+      `Chapter not found: ${bookInfo.name} ${chapter} (${code})`
     );
   }
+  await saveChapter(code, bookInfo.bollsId, chapter, verses, options);
   return verses;
 }
 
@@ -59,17 +90,24 @@ export async function getVerses(
   chapter,
   verseStart = null,
   verseEnd = null,
-  translation = "KJV"
+  translation = "KJV",
+  options = {}
 ) {
   const bookInfo = resolveBook(book);
+  const code = normalizeTranslation(translation);
 
-  if (isKjv(translation)) {
+  if (isKjv(code)) {
     return getKjvVerses({ book: bookInfo.name, chapter, verseStart, verseEnd });
   }
 
-  const chapterVerses = await getChapter(bookInfo.name, chapter, translation);
+  const chapterVerses = await getChapter(bookInfo.name, chapter, code, options);
+  if (chapterVerses.length === 0) {
+    throw new VerseNotFoundError(`Chapter not found: ${bookInfo.name} ${chapter} (${code})`);
+  }
+
   const start = verseStart ?? 1;
-  const end = verseEnd ?? chapterVerses.length;
+  const end =
+    verseEnd ?? Math.max(...chapterVerses.map((entry) => Number(entry.verse)));
   const range = chapterVerses.filter((verse) => verse.verse >= start && verse.verse <= end);
 
   if (range.length !== end - start + 1) {
@@ -81,35 +119,46 @@ export async function getVerses(
   return range;
 }
 
-export function getVerse(book, chapter, verse, translation = "KJV") {
-  return getVerses(book, chapter, verse, verse, translation).then(
+export function getVerse(book, chapter, verse, translation = "KJV", options = {}) {
+  return getVerses(book, chapter, verse, verse, translation, options).then(
     (verses) => verses[0]
   );
 }
 
-export function getVerseRange(book, chapter, verseStart, verseEnd, translation = "KJV") {
-  return getVerses(book, chapter, verseStart, verseEnd, translation);
+export function getVerseRange(book, chapter, verseStart, verseEnd, translation = "KJV", options = {}) {
+  return getVerses(book, chapter, verseStart, verseEnd, translation, options);
 }
 
-export async function search(query, translation = "KJV") {
+export async function search(query, translation = "KJV", options = {}) {
   const needle = String(query ?? "").trim();
   if (!needle) return [];
 
-  if (isKjv(translation)) {
-    return searchKjv(needle, MAX_SEARCH_RESULTS);
+  const code = normalizeTranslation(translation);
+  const limit = Number.isInteger(options.limit) && options.limit > 0
+    ? options.limit
+    : MAX_SEARCH_RESULTS;
+
+  if (isKjv(code)) {
+    return searchKjv(needle, limit);
   }
 
-  const results = await bolls.search(translation, needle);
-  return results.slice(0, MAX_SEARCH_RESULTS).map(mapBollsSearchResult);
+  if (await hasCachedData(code, options)) {
+    return (await searchCache(code, needle, options)).slice(0, limit);
+  }
+
+  const results = await bolls.search(code, needle);
+  return results.slice(0, limit).map(mapBollsSearchResult);
 }
 
-export async function getRandomVerse(translation = "KJV") {
-  if (isKjv(translation)) {
+export async function getRandomVerse(translation = "KJV", options = {}) {
+  const code = normalizeTranslation(translation);
+
+  if (isKjv(code)) {
     return getKjvRandomVerse();
   }
 
   try {
-    const verse = await bolls.getRandomVerse(translation);
+    const verse = await bolls.getRandomVerse(code);
     const bookInfo = getBookByBollsId(verse.book);
     return {
       book: bookInfo ? bookInfo.name : `#${verse.book}`,
@@ -117,7 +166,55 @@ export async function getRandomVerse(translation = "KJV") {
       verse: verse.verse,
       text: verse.text
     };
-  } catch {
+  } catch (error) {
+    if (error?.name !== "NetworkError") {
+      throw error;
+    }
+    warn(
+      options,
+      `Could not reach bolls.life for ${code} (${error.message}); showing a KJV verse instead.`
+    );
     return getKjvRandomVerse();
   }
+}
+
+/**
+ * The verse of the day for a translation.
+ *
+ * The day resolves to one deterministic KJV reference, which is then looked up
+ * in the requested translation. If that translation cannot supply it, the KJV
+ * text is used and the fallback is reported on stderr.
+ */
+export async function getVerseOfTheDay(translation = "KJV", options = {}) {
+  const code = normalizeTranslation(translation);
+  const base = await getKjvVerseOfTheDay();
+
+  if (isKjv(code)) {
+    return base;
+  }
+
+  try {
+    const chapter = await getChapter(base.book, base.chapter, code, options);
+    const match = chapter.find((entry) => Number(entry.verse) === Number(base.verse));
+
+    if (match) {
+      return { ...base, text: match.text };
+    }
+
+    warn(
+      options,
+      `Verse ${base.chapter}:${base.verse} is not present in ${code}; showing the KJV text instead.`
+    );
+  } catch (error) {
+    if (error?.name === "NetworkError" || error?.name === "UnsupportedTranslationError") {
+      warn(
+        options,
+        `Could not load ${code} for ${base.book} ${base.chapter} (${error.message}); showing the KJV text instead.`
+      );
+    } else {
+      throw error;
+    }
+  }
+
+  return base;
 }

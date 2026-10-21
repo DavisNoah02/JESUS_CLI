@@ -39,7 +39,7 @@ export async function getChapter(bookValue, chapterNumber) {
 export async function getVerses(reference) {
   const chapter = await getChapter(reference.book, reference.chapter);
   const start = reference.verseStart ?? 1;
-  const end = reference.verseEnd ?? chapter.length;
+  const end = reference.verseEnd ?? Math.max(...chapter.map((entry) => entry.verse));
   const verses = chapter.filter((verse) => verse.verse >= start && verse.verse <= end);
 
   if (verses.length !== end - start + 1) {
@@ -132,9 +132,31 @@ export async function randomVerse() {
   return pickVerseBySeed(seed);
 }
 
+/**
+ * Local calendar date as YYYY-MM-DD.
+ *
+ * Deliberately not `toISOString()`, which is UTC: a user east or west of UTC
+ * would otherwise get the previous or next day's verse for up to 14 hours.
+ */
+export function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export async function verseOfTheDay(date = new Date()) {
-  const day = date.toISOString().slice(0, 10);
-  return pickVerseBySeed(fnv1a(day));
+  return pickVerseBySeed(fnv1a(localDateKey(date)));
+}
+
+/**
+ * The verse reference for a given day, without any text.
+ *
+ * Lets another translation be resolved for the same deterministic verse.
+ */
+export async function verseOfTheDayReference(date = new Date()) {
+  const verse = await pickVerseBySeed(fnv1a(localDateKey(date)));
+  return { book: verse.book, chapter: verse.chapter, verse: verse.verse };
 }
 
 function fnv1a(value) {

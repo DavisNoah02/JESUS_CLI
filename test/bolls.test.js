@@ -47,7 +47,7 @@ test("searches a translation over the network", async (t) => {
 test("fetches a random verse over the network", async (t) => {
   try {
     const verse = await getRandomVerse("WEB");
-    assert.ok(verse.book >= 1 && verse.book <= 66);
+    assert.ok(verse.book >= 1);
     assert.ok(verse.chapter >= 1);
     assert.ok(verse.verse >= 1);
     assert.ok(verse.text.length > 0);

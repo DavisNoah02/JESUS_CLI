@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { BOOKS, getBook, getBookByBollsId, normalizeBook } from "../src/data/books.js";
-import { loadKjv, getChapter, getVerses, randomVerse, search, verseOfTheDay } from "../src/data/kjv.js";
+import { loadKjv, getChapter, getVerses, localDateKey, randomVerse, search, verseOfTheDay, verseOfTheDayReference } from "../src/data/kjv.js";
 import { parseReference } from "../src/data/reference.js";
 
 test("contains the 66 canonical books", () => {
@@ -114,14 +114,50 @@ test("randomVerse returns real verses and varies across runs", async () => {
 });
 
 test("verseOfTheDay is stable per date and varies across days", async () => {
-  const morning = await verseOfTheDay(new Date("2026-09-23T10:00:00Z"));
-  const evening = await verseOfTheDay(new Date("2026-09-23T23:59:00Z"));
+  // Local-time constructors: the day boundary is the user's local day, not UTC.
+  const morning = await verseOfTheDay(new Date(2026, 8, 23, 10, 0, 0));
+  const evening = await verseOfTheDay(new Date(2026, 8, 23, 23, 59, 0));
   assert.deepEqual(morning, evening);
 
   const days = [];
-  for (let d = 0; d < 10; d += 1) {
-    const verse = await verseOfTheDay(new Date(`2026-09-2${d}T12:00:00Z`));
+  for (let d = 20; d < 30; d += 1) {
+    const verse = await verseOfTheDay(new Date(2026, 8, d, 12, 0, 0));
     days.push(`${verse.book} ${verse.chapter}:${verse.verse}`);
   }
   assert.ok(new Set(days).size > 1, "expected different verses across days");
+});
+
+test("localDateKey uses local calendar components, not UTC", () => {
+  assert.equal(localDateKey(new Date(2026, 8, 23, 12, 0, 0)), "2026-09-23");
+  assert.equal(localDateKey(new Date(2026, 0, 1, 0, 0, 0)), "2026-01-01");
+  assert.equal(localDateKey(new Date(2026, 11, 31, 23, 59, 59)), "2026-12-31");
+});
+
+test("localDateKey tracks the local day even when UTC differs", () => {
+  const date = new Date("2026-09-23T23:30:00Z");
+  const expected = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  assert.equal(localDateKey(date), expected);
+});
+
+test("verseOfTheDay is stable within a local day in a non-UTC timezone", async (t) => {
+  const original = process.env.TZ;
+  process.env.TZ = "Pacific/Kiritimati";
+  t.after(() => {
+    process.env.TZ = original;
+  });
+
+  const morning = await verseOfTheDay(new Date(2026, 8, 23, 10, 0, 0));
+  const evening = await verseOfTheDay(new Date(2026, 8, 23, 23, 59, 0));
+  assert.deepEqual(morning, evening);
+});
+
+test("verseOfTheDayReference matches the verse of the day", async () => {
+  const date = new Date(2026, 8, 23, 12, 0, 0);
+  const verse = await verseOfTheDay(date);
+  const reference = await verseOfTheDayReference(date);
+
+  assert.equal(reference.book, verse.book);
+  assert.equal(reference.chapter, verse.chapter);
+  assert.equal(reference.verse, verse.verse);
+  assert.equal(reference.text, undefined);
 });
