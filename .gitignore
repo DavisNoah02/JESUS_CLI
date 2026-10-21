@@ -2,3 +2,7 @@ node_modules/
 npm-debug.log*
 .DS_Store
 *.tmp
+
+# Local documentation: kept on disk, not tracked in the repository.
+# The shipped docs are the README and the npm package description.
+docs/
