@@ -1,4 +1,4 @@
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -11,10 +11,13 @@ export const DEFAULT_STATE = Object.freeze({
   translation: "KJV"
 });
 
-const APP_DIR = "jesus-cli";
+export const APP_DIR = "jesus-cli";
 const STATE_FILE = "state.json";
 
 export function defaultDataDir({ platform = process.platform, env = process.env } = {}) {
+  if (env.JESUS_CLI_DATA_DIR) {
+    return env.JESUS_CLI_DATA_DIR;
+  }
   if (platform === "darwin") {
     return join(homedir(), "Library", "Application Support");
   }
@@ -46,10 +49,12 @@ export async function load({ path = statePath() } = {}) {
  * a failed save must never crash or block the reader).
  */
 export async function save(state, { path = statePath() } = {}) {
+  const tmp = `${path}.tmp`;
   try {
     await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(state, null, 2), "utf8");
+    await writeFile(tmp, JSON.stringify(state, null, 2), "utf8");
+    await rename(tmp, path);
   } catch {
-    /* intentionally silent */
+    await rm(tmp, { force: true }).catch(() => {});
   }
 }

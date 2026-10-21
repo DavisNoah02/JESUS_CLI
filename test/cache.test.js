@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -8,9 +8,11 @@ import {
   COMPLETE_MARKER,
   hasCachedData,
   isFullyCached,
+  legacyTranslationsDir,
   loadBookNames,
   loadChapter,
   markComplete,
+  migrateLegacyCache,
   removeCompleteMarker,
   saveBookNames,
   saveChapter,
@@ -20,6 +22,46 @@ import {
 } from "../src/store/cache.js";
 
 const newDir = () => mkdtemp(join(tmpdir(), "cache-"));
+
+test("the cache lives under the app data directory", () => {
+  const dir = "/tmp/data";
+  assert.equal(translationDir("WEB", { dataDir: dir }), join(dir, "jesus-cli", "translations", "WEB"));
+  assert.equal(translationDir("web", { dataDir: dir }), join(dir, "jesus-cli", "translations", "WEB"));
+});
+
+test("a legacy cache directory is migrated to the namespaced location", async () => {
+  const dir = await newDir();
+  const legacy = join(dir, "translations", "WEB");
+  await mkdir(legacy, { recursive: true });
+  await writeFile(join(legacy, "43_3.json"), '[{"verse":1,"text":"legacy"}]', "utf8");
+
+  assert.equal(legacyTranslationsDir({ dataDir: dir }), join(dir, "translations"));
+
+  const migrated = await migrateLegacyCache({ dataDir: dir });
+  assert.equal(migrated, true);
+
+  const loaded = await loadChapter("WEB", 43, 3, { dataDir: dir });
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0].text, "legacy");
+});
+
+test("migration is a no-op when there is no legacy cache", async () => {
+  const dir = await newDir();
+  assert.equal(await migrateLegacyCache({ dataDir: dir }), false);
+});
+
+test("migration never overwrites an existing namespaced cache", async () => {
+  const dir = await newDir();
+  await mkdir(join(dir, "translations", "WEB"), { recursive: true });
+  await writeFile(join(dir, "translations", "WEB", "43_3.json"), '[{"verse":1,"text":"legacy"}]', "utf8");
+  await mkdir(join(dir, "jesus-cli", "translations", "WEB"), { recursive: true });
+  await writeFile(join(dir, "jesus-cli", "translations", "WEB", "43_3.json"), '[{"verse":1,"text":"current"}]', "utf8");
+
+  await migrateLegacyCache({ dataDir: dir });
+
+  const loaded = await loadChapter("WEB", 43, 3, { dataDir: dir });
+  assert.equal(loaded[0].text, "current");
+});
 
 test("chapter round-trips through an atomic save/load", async () => {
   const dir = await newDir();
@@ -46,7 +88,7 @@ test("temp files are never left behind after a successful save", async () => {
 test("saveChapter creates the translation directory", async () => {
   const dir = await newDir();
   await saveChapter("web", 1, 1, [{ verse: 1, text: "lowercase translation" }], { dataDir: dir });
-  const entries = await readdir(join(dir, "translations"));
+  const entries = await readdir(join(dir, "jesus-cli", "translations"));
   assert.deepEqual(entries, ["WEB"]);
 });
 

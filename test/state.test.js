@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_STATE, defaultDataDir, load, save, statePath } from "../src/store/state.js";
@@ -66,6 +66,32 @@ test("defaultDataDir resolves per platform and env", () => {
   assert.equal(defaultDataDir({ platform: "win32", env: { APPDATA: "C:\\appdata" } }), "C:\\appdata");
 });
 
+test("JESUS_CLI_DATA_DIR overrides every platform default", () => {
+  assert.equal(
+    defaultDataDir({ platform: "linux", env: { JESUS_CLI_DATA_DIR: "/custom" } }),
+    "/custom"
+  );
+  assert.equal(
+    defaultDataDir({ platform: "darwin", env: { JESUS_CLI_DATA_DIR: "/custom" } }),
+    "/custom"
+  );
+  assert.equal(
+    defaultDataDir({ platform: "win32", env: { JESUS_CLI_DATA_DIR: "/custom" } }),
+    "/custom"
+  );
+  assert.equal(
+    defaultDataDir({ platform: "linux", env: { JESUS_CLI_DATA_DIR: "", XDG_DATA_HOME: "/xdg" } }),
+    "/xdg"
+  );
+});
+
 test("statePath nests the app dir and file under the data dir", () => {
   assert.equal(statePath({ dataDir: "/root" }), join("/root", "jesus-cli", "state.json"));
+});
+
+test("save leaves no temp file behind", async () => {
+  const path = join(dir, "atomic", "state.json");
+  await save(DEFAULT_STATE, { path });
+  const entries = await readdir(join(dir, "atomic"));
+  assert.deepEqual(entries, ["state.json"]);
 });
