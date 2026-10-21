@@ -39,3 +39,10 @@ export class NetworkError extends Error {
     this.name = "NetworkError";
   }
 }
+
+export class UnsupportedTranslationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "UnsupportedTranslationError";
+  }
+}
