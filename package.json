@@ -21,7 +21,7 @@
   "author": "noah_dave <m.davenoa@gmail.com>",
   "type": "module",
   "bin": {
-    "Jesus": "./src/cli.js"
+    "Jesus": "src/cli.js"
   },
   "engines": {
     "node": ">=22"
