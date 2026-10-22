@@ -7,15 +7,29 @@
     "Jesus": "./src/cli.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "test": "node --test",
-    "start": "node src/cli.js"
+    "start": "node src/cli.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm test"
   },
   "files": [
     "src",
     "data",
     "README.md"
-  ]
+  ],
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3"
+  }
 }

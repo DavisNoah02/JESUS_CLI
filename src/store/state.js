@@ -8,7 +8,7 @@ export const DEFAULT_STATE = Object.freeze({
   scrollPosition: 0,
   activePanel: 0,
   theme: "Slate",
-  translation: "KJV"
+  translation: "KJV",
 });
 
 export const APP_DIR = "jesus-cli";
@@ -30,7 +30,7 @@ export function defaultDataDir({ platform = process.platform, env = process.env 
 export function statePath({
   dataDir = defaultDataDir(),
   appDir = APP_DIR,
-  fileName = STATE_FILE
+  fileName = STATE_FILE,
 } = {}) {
   return join(dataDir, appDir, fileName);
 }

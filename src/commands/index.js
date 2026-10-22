@@ -9,7 +9,7 @@ export const COMMANDS = Object.freeze({
   search: searchCommand,
   random: randomCommand,
   today: todayCommand,
-  config: configCommand
+  config: configCommand,
 });
 
 export { readCommand, searchCommand, randomCommand, todayCommand, configCommand };

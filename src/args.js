@@ -3,21 +3,21 @@ import { UsageError } from "./errors.js";
 const STRING_OPTIONS = new Map([
   ["translation", "translation"],
   ["theme", "theme"],
-  ["limit", "limit"]
+  ["limit", "limit"],
 ]);
 
 const BOOLEAN_OPTIONS = new Map([
   ["no-color", "no-color"],
   ["debug", "debug"],
   ["help", "help"],
-  ["version", "version"]
+  ["version", "version"],
 ]);
 
 const SHORT_OPTIONS = new Map([
   ["t", "translation"],
   ["n", "limit"],
   ["h", "help"],
-  ["V", "version"]
+  ["V", "version"],
 ]);
 
 function looksLikeOption(token) {
@@ -88,19 +88,19 @@ export function parseArgs(argv = []) {
 
     if (/^-[^-]/.test(arg)) {
       const short = arg.slice(1);
+      const long = SHORT_OPTIONS.get(short);
 
-      if (SHORT_OPTIONS.has(short)) {
-        const long = SHORT_OPTIONS.get(short);
-        if (BOOLEAN_OPTIONS.has(long)) {
-          flags[long] = true;
-          continue;
-        }
-        flags[long] = readValue(argv, index, `-${short}`);
-        index += 1;
-        continue;
+      if (long === undefined) {
+        throw new UsageError(`Unknown option: ${arg}`);
       }
 
-      throw new UsageError(`Unknown option: ${arg}`);
+      if (BOOLEAN_OPTIONS.has(long)) {
+        flags[long] = true;
+        continue;
+      }
+      flags[long] = readValue(argv, index, `-${short}`);
+      index += 1;
+      continue;
     }
 
     positionals.push(arg);

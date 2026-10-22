@@ -1,4 +1,4 @@
-import { NetworkError } from "../errors.js";
+import { errorMessage, NetworkError } from "../errors.js";
 
 const BASE = "https://bolls.life";
 const TIMEOUT_MS = 10_000;
@@ -11,7 +11,7 @@ async function request(path) {
   try {
     response = await fetch(`${BASE}${path}`, { signal: controller.signal });
   } catch (error) {
-    throw new NetworkError(`Bolls request failed: ${path} (${error?.message ?? error})`);
+    throw new NetworkError(`Bolls request failed: ${path} (${errorMessage(error)})`);
   } finally {
     clearTimeout(timeout);
   }
@@ -24,7 +24,7 @@ async function request(path) {
   try {
     body = await response.text();
   } catch (error) {
-    throw new NetworkError(`Bolls request failed: ${path} (${error?.message ?? error})`);
+    throw new NetworkError(`Bolls request failed: ${path} (${errorMessage(error)})`);
   }
 
   try {
@@ -90,7 +90,7 @@ export async function getRandomVerse(translation) {
     book: entry.book,
     chapter: entry.chapter,
     verse: entry.verse,
-    text: cleanHtml(entry.text)
+    text: cleanHtml(entry.text),
   };
 }
 
@@ -100,6 +100,6 @@ export async function search(translation, query) {
     book: entry.book,
     chapter: entry.chapter,
     verse: entry.verse,
-    text: cleanHtml(entry.text)
+    text: cleanHtml(entry.text),
   }));
 }

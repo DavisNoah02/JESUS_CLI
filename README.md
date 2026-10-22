@@ -92,14 +92,14 @@ Jesus --version
 
 ### Options
 
-| Option | Description |
-| --- | --- |
-| `-t, --translation <CODE>` | Translation to use (KJV, WEB, NIV, ESV, ...) |
-| `--theme <NAME>` | Theme to use (Slate, Midnight) |
-| `-n, --limit <N>` | Maximum number of search results |
-| `--no-color` | Disable colored output |
-| `--debug` | Show stack traces for errors |
-| `--` | Treat everything after this as plain arguments |
+| Option                     | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| `-t, --translation <CODE>` | Translation to use (KJV, WEB, NIV, ESV, ...)   |
+| `--theme <NAME>`           | Theme to use (Slate, Midnight)                 |
+| `-n, --limit <N>`          | Maximum number of search results               |
+| `--no-color`               | Disable colored output                         |
+| `--debug`                  | Show stack traces for errors                   |
+| `--`                       | Treat everything after this as plain arguments |
 
 Flags work before, between, or after the command. `--translation` applies to that one
 invocation only; use `config set` to change the saved default.
@@ -147,7 +147,7 @@ Planned next:
 
 ## Tech
 
-- Node.js 18+ (22+ recommended)
+- Node.js 22+ (24 recommended)
 - JavaScript / ESM
 - bundled KJV JSON (66 books, 31,102 verses)
 - Node test runner
@@ -165,7 +165,7 @@ Planned next:
 - Milestone 7 — wire the layers into the CLI — complete
 - Milestone 8 — developer-grade output (`--json`, pagination, `books`)
 - Milestone 9 — reference parsing and lookup quality
-- Milestone 10 — lint, format, and type-check baseline
+- Milestone 10 — lint, format, and type-check baseline — complete
 - Milestone 11 — publish to npm
 - Milestone 12 — terminal UI
 
@@ -179,10 +179,26 @@ MIT
 ## Development
 
 ```bash
-npm test          # 130 tests, no network required for the KJV path
-npm link          # link the `Jesus` command locally
+npm ci             # install the toolchain from the lockfile
+npm test           # 130 tests; the KJV path needs no network
+npm run check      # lint + format + type check + tests, all in one
+npm link           # link the `Jesus` command locally
 node src/cli.js --help
 ```
+
+Individual gates:
+
+| Command                | Checks                                                |
+| ---------------------- | ----------------------------------------------------- |
+| `npm run lint`         | ESLint, flat config, Node globals                     |
+| `npm run lint:fix`     | ESLint with autofix                                   |
+| `npm run format`       | Prettier, writes in place                             |
+| `npm run format:check` | Prettier, fails on drift                              |
+| `npm run typecheck`    | `tsc --noEmit` over the JSDoc types in `checkJs` mode |
+| `npm run check`        | All of the above, then the tests                      |
+
+The source is plain JavaScript with JSDoc types, so `npm run typecheck` covers the whole
+project without a TypeScript migration.
 
 The CLI stores its settings and translation cache in the per-platform data directory
 (`~/.local/share/jesus-cli` on Linux, `~/Library/Application Support/jesus-cli` on macOS,

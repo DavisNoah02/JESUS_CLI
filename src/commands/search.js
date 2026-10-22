@@ -17,8 +17,8 @@ export async function searchCommand(context) {
     printResult(
       paint(`No results for "${query}"`, "muted", {
         theme: context.theme,
-        enabled: context.colorEnabled
-      })
+        enabled: context.colorEnabled,
+      }),
     );
     return;
   }

@@ -9,11 +9,11 @@ import { printResult } from "../logger.js";
 export function printVerse(verse, context) {
   const reference = paint(`${verse.book} ${verse.chapter}:${verse.verse}`, "ref", {
     theme: context.theme,
-    enabled: context.colorEnabled
+    enabled: context.colorEnabled,
   });
   const label = paint(`(${context.translation})`, "muted", {
     theme: context.theme,
-    enabled: context.colorEnabled
+    enabled: context.colorEnabled,
   });
 
   printResult(`${reference} - ${verse.text} ${label}`);

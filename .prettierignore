@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+package-lock.json
+
+# The bundled KJV is a 4.7 MB generated data file. Never reformat it.
+data/
+
+# Local documentation is not tracked and is not published.
+docs/

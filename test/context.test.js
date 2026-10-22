@@ -14,7 +14,7 @@ test("an explicit translation flag wins and is validated strictly", () => {
   assert.equal(messages.length, 0);
   assert.throws(() => resolveTranslation("ZZZ", "KJV", collector().warn), {
     name: "UsageError",
-    message: /Unknown translation: ZZZ/
+    message: /Unknown translation: ZZZ/,
   });
 });
 
@@ -43,7 +43,7 @@ test("resolves themes case-insensitively to their canonical name", () => {
 test("rejects an unknown theme flag and lists the valid ones", () => {
   assert.throws(() => resolveTheme("Neon", "Slate", collector().warn), {
     name: "UsageError",
-    message: /Unknown theme: Neon.*Slate, Midnight/
+    message: /Unknown theme: Neon.*Slate, Midnight/,
   });
 });
 

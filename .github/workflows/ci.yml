@@ -10,14 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18, 20, 22] # engines: >=18; 22 is LTS
+        node: [22, 24] # engines: >=22; 22 and 24 are the supported LTS lines
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Install
+        run: npm ci
       - name: Smoke --version
         run: node src/cli.js --version
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Type check
+        run: npm run typecheck
       - name: Tests
         run: npm test
       - name: Packaging dry-run

@@ -64,33 +64,33 @@ test("finds options before, between, and after positionals", () => {
 test("rejects unknown options", () => {
   assert.throws(() => parseArgs(["read", "John 3:16", "--bogus"]), {
     name: "UsageError",
-    message: /Unknown option: --bogus/
+    message: /Unknown option: --bogus/,
   });
   assert.throws(() => parseArgs(["read", "-z"]), {
     name: "UsageError",
-    message: /Unknown option: -z/
+    message: /Unknown option: -z/,
   });
 });
 
 test("rejects options that are missing a value", () => {
   assert.throws(() => parseArgs(["read", "--translation"]), {
     name: "UsageError",
-    message: /Option --translation requires a value/
+    message: /Option --translation requires a value/,
   });
   assert.throws(() => parseArgs(["read", "-t"]), {
     name: "UsageError",
-    message: /Option -t requires a value/
+    message: /Option -t requires a value/,
   });
   assert.throws(() => parseArgs(["read", "--translation", "--no-color"]), {
     name: "UsageError",
-    message: /Option --translation requires a value/
+    message: /Option --translation requires a value/,
   });
 });
 
 test("rejects a value passed to a boolean option", () => {
   assert.throws(() => parseArgs(["read", "--no-color=yes"]), {
     name: "UsageError",
-    message: /Option --no-color does not take a value/
+    message: /Option --no-color does not take a value/,
   });
 });
 

@@ -31,7 +31,7 @@ export function parseReference(value) {
     );
   }
 
-  if (verseEnd !== null && verseEnd < verseStart) {
+  if (verseEnd !== null && verseStart !== null && verseEnd < verseStart) {
     throw new ReferenceParseError(`Invalid verse range: ${value}`);
   }
 

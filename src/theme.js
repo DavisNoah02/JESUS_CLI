@@ -4,15 +4,15 @@ const PALETTES = Object.freeze({
     muted: "2",
     error: "31;1",
     warning: "33;1",
-    accent: "32"
+    accent: "32",
   }),
   Midnight: Object.freeze({
     ref: "35;1",
     muted: "2",
     error: "31;1",
     warning: "93;1",
-    accent: "94"
-  })
+    accent: "94",
+  }),
 });
 
 const DEFAULT_PALETTE = "Slate";
@@ -20,6 +20,14 @@ const DEFAULT_PALETTE = "Slate";
 export const THEME_NAMES = Object.freeze(Object.keys(PALETTES));
 export const DEFAULT_THEME = DEFAULT_PALETTE;
 
+/**
+ * Decide whether ANSI colour should be used for a stream.
+ *
+ * @param {object} [options]
+ * @param {Record<string, string|undefined>} [options.env] environment to read
+ * @param {{ isTTY?: boolean }} [options.stream] the stream that will be written to
+ * @returns {boolean}
+ */
 export function shouldUseColor({ env = process.env, stream = process.stdout } = {}) {
   if (env.NO_COLOR !== undefined && env.NO_COLOR !== "") return false;
   if (env.TERM === "dumb") return false;

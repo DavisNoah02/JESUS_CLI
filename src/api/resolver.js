@@ -4,16 +4,21 @@ import {
   getVerses as getKjvVerses,
   randomVerse as getKjvRandomVerse,
   search as searchKjv,
-  verseOfTheDay as getKjvVerseOfTheDay
+  verseOfTheDay as getKjvVerseOfTheDay,
 } from "../data/kjv.js";
-import { UnsupportedTranslationError, VerseNotFoundError } from "../errors.js";
+import {
+  errorMessage,
+  errorName,
+  UnsupportedTranslationError,
+  VerseNotFoundError,
+} from "../errors.js";
 import {
   hasCachedData,
   isFullyCached,
   loadChapter,
   removeCompleteMarker,
   saveChapter,
-  search as searchCache
+  search as searchCache,
 } from "../store/cache.js";
 import * as bolls from "./bolls.js";
 import { isSupportedTranslation, normalizeTranslation } from "./translations.js";
@@ -38,7 +43,7 @@ function resolveBook(book) {
 function assertChapterBounds(bookInfo, chapter) {
   if (chapter < 1 || chapter > bookInfo.chapters) {
     throw new VerseNotFoundError(
-      `${bookInfo.name} has ${bookInfo.chapters} chapter${bookInfo.chapters === 1 ? "" : "s"}, but chapter ${chapter} was requested`
+      `${bookInfo.name} has ${bookInfo.chapters} chapter${bookInfo.chapters === 1 ? "" : "s"}, but chapter ${chapter} was requested`,
     );
   }
 }
@@ -49,7 +54,7 @@ function mapBollsSearchResult(entry) {
     book: bookInfo ? bookInfo.name : `#${entry.book}`,
     chapter: entry.chapter,
     verse: entry.verse,
-    text: entry.text
+    text: entry.text,
   };
 }
 
@@ -74,24 +79,33 @@ export async function getChapter(book, chapter, translation = "KJV", options = {
   if (verses.length === 0) {
     if (!isSupportedTranslation(code)) {
       throw new UnsupportedTranslationError(
-        `Unknown translation: ${code}. bolls.life does not serve it.`
+        `Unknown translation: ${code}. bolls.life does not serve it.`,
       );
     }
-    throw new VerseNotFoundError(
-      `Chapter not found: ${bookInfo.name} ${chapter} (${code})`
-    );
+    throw new VerseNotFoundError(`Chapter not found: ${bookInfo.name} ${chapter} (${code})`);
   }
   await saveChapter(code, bookInfo.bollsId, chapter, verses, options);
   return verses;
 }
 
+/**
+ * Fetch a verse, a verse range, or a whole chapter.
+ *
+ * @param {string} book canonical or alias book name
+ * @param {number} chapter chapter number
+ * @param {number|null} [verseStart] first verse, or null for the whole chapter
+ * @param {number|null} [verseEnd] last verse, or null for the whole chapter
+ * @param {string} [translation] translation code
+ * @param {import("./types.js").ResolverOptions} [options] resolver options
+ * @returns {Promise<import("./types.js").Verse[]>}
+ */
 export async function getVerses(
   book,
   chapter,
   verseStart = null,
   verseEnd = null,
   translation = "KJV",
-  options = {}
+  options = {},
 ) {
   const bookInfo = resolveBook(book);
   const code = normalizeTranslation(translation);
@@ -106,26 +120,28 @@ export async function getVerses(
   }
 
   const start = verseStart ?? 1;
-  const end =
-    verseEnd ?? Math.max(...chapterVerses.map((entry) => Number(entry.verse)));
+  const end = verseEnd ?? Math.max(...chapterVerses.map((entry) => Number(entry.verse)));
   const range = chapterVerses.filter((verse) => verse.verse >= start && verse.verse <= end);
 
   if (range.length !== end - start + 1) {
-    throw new VerseNotFoundError(
-      `Verse not found: ${bookInfo.name} ${chapter}:${start}-${end}`
-    );
+    throw new VerseNotFoundError(`Verse not found: ${bookInfo.name} ${chapter}:${start}-${end}`);
   }
 
   return range;
 }
 
 export function getVerse(book, chapter, verse, translation = "KJV", options = {}) {
-  return getVerses(book, chapter, verse, verse, translation, options).then(
-    (verses) => verses[0]
-  );
+  return getVerses(book, chapter, verse, verse, translation, options).then((verses) => verses[0]);
 }
 
-export function getVerseRange(book, chapter, verseStart, verseEnd, translation = "KJV", options = {}) {
+export function getVerseRange(
+  book,
+  chapter,
+  verseStart,
+  verseEnd,
+  translation = "KJV",
+  options = {},
+) {
   return getVerses(book, chapter, verseStart, verseEnd, translation, options);
 }
 
@@ -134,9 +150,8 @@ export async function search(query, translation = "KJV", options = {}) {
   if (!needle) return [];
 
   const code = normalizeTranslation(translation);
-  const limit = Number.isInteger(options.limit) && options.limit > 0
-    ? options.limit
-    : MAX_SEARCH_RESULTS;
+  const limit =
+    Number.isInteger(options.limit) && options.limit > 0 ? options.limit : MAX_SEARCH_RESULTS;
 
   if (isKjv(code)) {
     return searchKjv(needle, limit);
@@ -164,15 +179,15 @@ export async function getRandomVerse(translation = "KJV", options = {}) {
       book: bookInfo ? bookInfo.name : `#${verse.book}`,
       chapter: verse.chapter,
       verse: verse.verse,
-      text: verse.text
+      text: verse.text,
     };
   } catch (error) {
-    if (error?.name !== "NetworkError") {
+    if (errorName(error) !== "NetworkError") {
       throw error;
     }
     warn(
       options,
-      `Could not reach bolls.life for ${code} (${error.message}); showing a KJV verse instead.`
+      `Could not reach bolls.life for ${code} (${errorMessage(error)}); showing a KJV verse instead.`,
     );
     return getKjvRandomVerse();
   }
@@ -203,13 +218,13 @@ export async function getVerseOfTheDay(translation = "KJV", options = {}) {
 
     warn(
       options,
-      `Verse ${base.chapter}:${base.verse} is not present in ${code}; showing the KJV text instead.`
+      `Verse ${base.chapter}:${base.verse} is not present in ${code}; showing the KJV text instead.`,
     );
   } catch (error) {
-    if (error?.name === "NetworkError" || error?.name === "UnsupportedTranslationError") {
+    if (errorName(error) === "NetworkError" || errorName(error) === "UnsupportedTranslationError") {
       warn(
         options,
-        `Could not load ${code} for ${base.book} ${base.chapter} (${error.message}); showing the KJV text instead.`
+        `Could not load ${code} for ${base.book} ${base.chapter} (${errorMessage(error)}); showing the KJV text instead.`,
       );
     } else {
       throw error;

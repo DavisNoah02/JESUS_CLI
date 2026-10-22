@@ -103,7 +103,10 @@ export async function loadChapter(translation, bollsId, chapter, options = {}) {
   await ensureMigrated(options);
   try {
     const contents = JSON.parse(
-      await readFile(join(translationDir(translation, options), chapterFile(bollsId, chapter)), "utf8")
+      await readFile(
+        join(translationDir(translation, options), chapterFile(bollsId, chapter)),
+        "utf8",
+      ),
     );
     return Array.isArray(contents) ? contents : null;
   } catch {
@@ -125,7 +128,7 @@ export async function loadBookNames(translation, options = {}) {
   await ensureMigrated(options);
   try {
     const names = JSON.parse(
-      await readFile(join(translationDir(translation, options), BOOK_NAMES_FILE), "utf8")
+      await readFile(join(translationDir(translation, options), BOOK_NAMES_FILE), "utf8"),
     );
     return Array.isArray(names) ? names : null;
   } catch {
@@ -183,9 +186,11 @@ export async function search(translation, query, options = {}) {
 
   const raw = [];
   for (const file of files) {
-    const [, bollsIdValue, chapterValue] = file.match(/^(\d+)_(\d+)\.json$/);
-    const bollsId = Number(bollsIdValue);
-    const chapter = Number(chapterValue);
+    const match = file.match(/^(\d+)_(\d+)\.json$/);
+    if (!match) continue;
+
+    const bollsId = Number(match[1]);
+    const chapter = Number(match[2]);
 
     let verses;
     try {
