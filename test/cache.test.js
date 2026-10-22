@@ -18,15 +18,21 @@ import {
   saveChapter,
   search,
   totalChapters,
-  translationDir
+  translationDir,
 } from "../src/store/cache.js";
 
 const newDir = () => mkdtemp(join(tmpdir(), "cache-"));
 
 test("the cache lives under the app data directory", () => {
   const dir = "/tmp/data";
-  assert.equal(translationDir("WEB", { dataDir: dir }), join(dir, "jesus-cli", "translations", "WEB"));
-  assert.equal(translationDir("web", { dataDir: dir }), join(dir, "jesus-cli", "translations", "WEB"));
+  assert.equal(
+    translationDir("WEB", { dataDir: dir }),
+    join(dir, "jesus-cli", "translations", "WEB"),
+  );
+  assert.equal(
+    translationDir("web", { dataDir: dir }),
+    join(dir, "jesus-cli", "translations", "WEB"),
+  );
 });
 
 test("a legacy cache directory is migrated to the namespaced location", async () => {
@@ -41,6 +47,7 @@ test("a legacy cache directory is migrated to the namespaced location", async ()
   assert.equal(migrated, true);
 
   const loaded = await loadChapter("WEB", 43, 3, { dataDir: dir });
+  assert.ok(loaded);
   assert.equal(loaded.length, 1);
   assert.equal(loaded[0].text, "legacy");
 });
@@ -53,13 +60,22 @@ test("migration is a no-op when there is no legacy cache", async () => {
 test("migration never overwrites an existing namespaced cache", async () => {
   const dir = await newDir();
   await mkdir(join(dir, "translations", "WEB"), { recursive: true });
-  await writeFile(join(dir, "translations", "WEB", "43_3.json"), '[{"verse":1,"text":"legacy"}]', "utf8");
+  await writeFile(
+    join(dir, "translations", "WEB", "43_3.json"),
+    '[{"verse":1,"text":"legacy"}]',
+    "utf8",
+  );
   await mkdir(join(dir, "jesus-cli", "translations", "WEB"), { recursive: true });
-  await writeFile(join(dir, "jesus-cli", "translations", "WEB", "43_3.json"), '[{"verse":1,"text":"current"}]', "utf8");
+  await writeFile(
+    join(dir, "jesus-cli", "translations", "WEB", "43_3.json"),
+    '[{"verse":1,"text":"current"}]',
+    "utf8",
+  );
 
   await migrateLegacyCache({ dataDir: dir });
 
   const loaded = await loadChapter("WEB", 43, 3, { dataDir: dir });
+  assert.ok(loaded);
   assert.equal(loaded[0].text, "current");
 });
 
@@ -67,7 +83,7 @@ test("chapter round-trips through an atomic save/load", async () => {
   const dir = await newDir();
   const verses = [
     { verse: 1, text: "In the beginning God created the heaven and the earth." },
-    { verse: 2, text: "And the earth was without form, and void." }
+    { verse: 2, text: "And the earth was without form, and void." },
   ];
 
   await saveChapter("WEB", 1, 1, verses, { dataDir: dir });
@@ -100,7 +116,7 @@ test("loadChapter treats missing, corrupt, and non-array files as a miss", async
   await writeFile(join(translationDir("WEB", { dataDir: dir }), "1_1.json"), "{ not json", "utf8");
   assert.equal(await loadChapter("WEB", 1, 1, { dataDir: dir }), null);
 
-  await writeFile(join(translationDir("WEB", { dataDir: dir }), "1_1.json"), "{\"a\":1}", "utf8");
+  await writeFile(join(translationDir("WEB", { dataDir: dir }), "1_1.json"), '{"a":1}', "utf8");
   assert.equal(await loadChapter("WEB", 1, 1, { dataDir: dir }), null);
 });
 
@@ -124,7 +140,7 @@ test(".complete marker gates isFullyCached", async () => {
   assert.equal(await isFullyCached("WEB", { dataDir: dir }), true);
   assert.equal(
     (await readdir(translationDir("WEB", { dataDir: dir }))).includes(COMPLETE_MARKER),
-    true
+    true,
   );
 
   await removeCompleteMarker("WEB", { dataDir: dir });
@@ -139,19 +155,30 @@ test("book names round-trip; corrupt book names load as null", async () => {
   const names = ["Genesis", "Exodus", "Psalms"];
   await saveBookNames("WEB", names, { dataDir: dir });
   assert.deepEqual(await loadBookNames("WEB", { dataDir: dir }), names);
-  assert.equal((await readdir(translationDir("WEB", { dataDir: dir }))).includes(BOOK_NAMES_FILE), true);
+  assert.equal(
+    (await readdir(translationDir("WEB", { dataDir: dir }))).includes(BOOK_NAMES_FILE),
+    true,
+  );
 
   await writeFile(join(translationDir("WEB", { dataDir: dir }), BOOK_NAMES_FILE), "broken", "utf8");
   assert.equal(await loadBookNames("WEB", { dataDir: dir }), null);
 
-  await writeFile(join(translationDir("WEB", { dataDir: dir }), BOOK_NAMES_FILE), "{\"a\":1}", "utf8");
+  await writeFile(
+    join(translationDir("WEB", { dataDir: dir }), BOOK_NAMES_FILE),
+    '{"a":1}',
+    "utf8",
+  );
   assert.equal(await loadBookNames("WEB", { dataDir: dir }), null);
 });
 
 test("search across cached chapters returns canonical order and skips corrupt files", async () => {
   const dir = await newDir();
-  await saveChapter("WEB", 19, 23, [{ verse: 1, text: "The LORD is my shepherd." }], { dataDir: dir });
-  await saveChapter("WEB", 43, 3, [{ verse: 1, text: "The shepherd of the door." }], { dataDir: dir });
+  await saveChapter("WEB", 19, 23, [{ verse: 1, text: "The LORD is my shepherd." }], {
+    dataDir: dir,
+  });
+  await saveChapter("WEB", 43, 3, [{ verse: 1, text: "The shepherd of the door." }], {
+    dataDir: dir,
+  });
   await writeFile(join(translationDir("WEB", { dataDir: dir }), "9_1.json"), "{ broken", "utf8");
 
   const results = await search("WEB", "shepherd", { dataDir: dir });
@@ -159,10 +186,17 @@ test("search across cached chapters returns canonical order and skips corrupt fi
   assert.equal(results.length, 2);
   assert.deepEqual(
     results.map(({ book }) => book),
-    ["Psalms", "John"]
+    ["Psalms", "John"],
   );
-  assert.deepEqual(results[0], { book: "Psalms", chapter: 23, verse: 1, text: "The LORD is my shepherd." });
-  assert.ok(results.every(({ book, chapter, verse, text }) => book && chapter >= 1 && verse >= 1 && text));
+  assert.deepEqual(results[0], {
+    book: "Psalms",
+    chapter: 23,
+    verse: 1,
+    text: "The LORD is my shepherd.",
+  });
+  assert.ok(
+    results.every(({ book, chapter, verse, text }) => book && chapter >= 1 && verse >= 1 && text),
+  );
 });
 
 test("search returns nothing for missing dirs and empty queries", async () => {

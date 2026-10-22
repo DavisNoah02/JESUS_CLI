@@ -3,8 +3,18 @@ import assert from "node:assert/strict";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getChapter, getRandomVerse, getVerse, getVerseOfTheDay, getVerseRange, getVerses, isKjv, search } from "../src/api/resolver.js";
+import {
+  getChapter,
+  getRandomVerse,
+  getVerse,
+  getVerseOfTheDay,
+  getVerseRange,
+  getVerses,
+  isKjv,
+  search,
+} from "../src/api/resolver.js";
 import { loadChapter, saveChapter, translationDir } from "../src/store/cache.js";
+import { errorName } from "../src/errors.js";
 
 const newDir = () => mkdtemp(join(tmpdir(), "resolver-"));
 
@@ -46,18 +56,15 @@ test("KJV random verse returns a shaped verse", async () => {
 
 test("rejects bad chapter bounds locally", async () => {
   const dir = await newDir();
-  await assert.rejects(
-    getChapter("Genesis", 51, "WEB"),
-    { name: "VerseNotFoundError", message: /Genesis has 50 chapters/ }
-  );
-  await assert.rejects(
-    getVerse("John", 3, 99, "KJV"),
-    { name: "VerseNotFoundError" }
-  );
-  await assert.rejects(
-    getChapter("Genesis", 51, "WEB", { dataDir: dir }),
-    { name: "VerseNotFoundError", message: /Genesis has 50 chapters/ }
-  );
+  await assert.rejects(getChapter("Genesis", 51, "WEB"), {
+    name: "VerseNotFoundError",
+    message: /Genesis has 50 chapters/,
+  });
+  await assert.rejects(getVerse("John", 3, 99, "KJV"), { name: "VerseNotFoundError" });
+  await assert.rejects(getChapter("Genesis", 51, "WEB", { dataDir: dir }), {
+    name: "VerseNotFoundError",
+    message: /Genesis has 50 chapters/,
+  });
 });
 
 test("WEB chapters resolve over the network and write through to the cache", async (t) => {
@@ -69,10 +76,11 @@ test("WEB chapters resolve over the network and write through to the cache", asy
     assert.doesNotMatch(chapter[0].text, /<|>/);
 
     const cached = await loadChapter("WEB", 43, 3, { dataDir: dir });
+    assert.ok(cached);
     assert.ok(cached.length >= 1);
     assert.equal(cached[0].verse, 1);
   } catch (error) {
-    if (error.name === "NetworkError") return t.skip("bolls.life unreachable");
+    if (errorName(error) === "NetworkError") return t.skip("bolls.life unreachable");
     throw error;
   }
 });
@@ -84,14 +92,16 @@ test("WEB search returns shaped results with book names", async (t) => {
     assert.ok(results.length >= 1);
     assert.match(results[0].book, /^[A-Za-z]/);
   } catch (error) {
-    if (error.name === "NetworkError") return t.skip("bolls.life unreachable");
+    if (errorName(error) === "NetworkError") return t.skip("bolls.life unreachable");
     throw error;
   }
 });
 
 test("WEB chapters are served from cache without hitting the network", async () => {
   const dir = await newDir();
-  await saveChapter("WEB", 43, 3, [{ verse: 16, text: "For God so loved the world." }], { dataDir: dir });
+  await saveChapter("WEB", 43, 3, [{ verse: 16, text: "For God so loved the world." }], {
+    dataDir: dir,
+  });
 
   const chapter = await getChapter("John", 3, "WEB", { dataDir: dir });
   assert.equal(chapter.length, 1);
@@ -100,25 +110,29 @@ test("WEB chapters are served from cache without hitting the network", async () 
 
 test("WEB cached chapters disappear when corrupt files are detected", async (t) => {
   const dir = await newDir();
-  await saveChapter("WEB", 43, 3, [{ verse: 16, text: "For God so loved the world." }], { dataDir: dir });
+  await saveChapter("WEB", 43, 3, [{ verse: 16, text: "For God so loved the world." }], {
+    dataDir: dir,
+  });
   await writeFile(
     join(translationDir("WEB", { dataDir: dir }), "43_3.json"),
     "{ not valid json",
-    "utf8"
+    "utf8",
   );
 
   try {
     const chapter = await getChapter("John", 3, "WEB", { dataDir: dir });
     assert.equal(chapter.length, 36);
   } catch (error) {
-    if (error.name === "NetworkError") return t.skip("bolls.life unreachable");
+    if (errorName(error) === "NetworkError") return t.skip("bolls.life unreachable");
     throw error;
   }
 });
 
 test("WEB search uses the cache once a translation has cached data", async () => {
   const dir = await newDir();
-  await saveChapter("WEB", 43, 3, [{ verse: 16, text: "For God so loved the world." }], { dataDir: dir });
+  await saveChapter("WEB", 43, 3, [{ verse: 16, text: "For God so loved the world." }], {
+    dataDir: dir,
+  });
 
   const results = await search("shepherd", "WEB", { dataDir: dir });
   assert.deepEqual(results, []);
@@ -156,7 +170,7 @@ test("the verse of the day resolves the same reference in another translation", 
     assert.equal(web.verse, kjv.verse);
     assert.notEqual(web.text, kjv.text);
   } catch (error) {
-    if (error.name === "NetworkError") return t.skip("bolls.life unreachable");
+    if (errorName(error) === "NetworkError") return t.skip("bolls.life unreachable");
     throw error;
   }
 });
@@ -173,10 +187,10 @@ test("the verse of the day falls back to KJV and warns when the translation is m
 
 test("an unknown translation is reported as such, not as a missing chapter", async () => {
   const dir = await newDir();
-  await assert.rejects(
-    getChapter("John", 3, "ZZZ", { dataDir: dir }),
-    { name: "UnsupportedTranslationError", message: /Unknown translation: ZZZ/ }
-  );
+  await assert.rejects(getChapter("John", 3, "ZZZ", { dataDir: dir }), {
+    name: "UnsupportedTranslationError",
+    message: /Unknown translation: ZZZ/,
+  });
 });
 
 test("a random verse in another translation falls back to KJV with a warning", async () => {

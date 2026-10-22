@@ -17,7 +17,7 @@ export async function readCommand(context) {
     reference.verseStart,
     reference.verseEnd,
     context.translation,
-    context.options
+    context.options,
   );
 
   for (const verse of verses) {

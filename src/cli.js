@@ -40,7 +40,7 @@ const KNOWN_ERROR_NAMES = new Set([
   "VerseNotFoundError",
   "CacheCorruptError",
   "NetworkError",
-  "UnsupportedTranslationError"
+  "UnsupportedTranslationError",
 ]);
 
 async function buildContext(parsed) {
@@ -71,7 +71,7 @@ async function buildContext(parsed) {
     theme,
     limit,
     colorEnabled: shouldUseColor() && !parsed.flags["no-color"],
-    options
+    options,
   };
 }
 

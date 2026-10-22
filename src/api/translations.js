@@ -23,13 +23,15 @@ export const TRANSLATIONS = Object.freeze({
   CJB: "Christian Journals Bible",
   NET: "New English Translation",
   CUV: "Chinese Union Version",
-  GNT: "Greek New Testament"
+  GNT: "Greek New Testament",
 });
 
 export const DEFAULT_TRANSLATION = "KJV";
 
 export function normalizeTranslation(value) {
-  return String(value ?? "").trim().toUpperCase();
+  return String(value ?? "")
+    .trim()
+    .toUpperCase();
 }
 
 export function isSupportedTranslation(value) {

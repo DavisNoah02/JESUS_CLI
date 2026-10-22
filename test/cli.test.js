@@ -29,7 +29,7 @@ function runCli(...args) {
 function runCliIn(dir, ...args) {
   return spawnSync(process.execPath, [cliPath, ...args], {
     encoding: "utf8",
-    env: { ...process.env, JESUS_CLI_DATA_DIR: dir }
+    env: { ...process.env, JESUS_CLI_DATA_DIR: dir },
   });
 }
 
@@ -260,7 +260,10 @@ test("a saved translation is used by later commands", async () => {
     assert.equal(set.status, 0);
 
     const result = runCliIn(dir, "read", "John 3:16");
-    if (result.status !== 0 && /bolls\.life|Bolls request failed|Bolls API responded/i.test(result.stderr)) {
+    if (
+      result.status !== 0 &&
+      /bolls\.life|Bolls request failed|Bolls API responded/i.test(result.stderr)
+    ) {
       return;
     }
     assert.equal(result.status, 0);
@@ -281,7 +284,7 @@ test("the --translation flag is ephemeral and never writes state", async () => {
 
     const wroteState = await readFile(join(dir, "jesus-cli", "state.json"), "utf8").then(
       () => true,
-      () => false
+      () => false,
     );
     assert.equal(wroteState, false, "a flag must not create a state file");
   } finally {

@@ -3,7 +3,7 @@ import {
   DEFAULT_TRANSLATION,
   isSupportedTranslation,
   normalizeTranslation,
-  translationCodes
+  translationCodes,
 } from "./api/translations.js";
 import { DEFAULT_THEME, THEME_NAMES, isValidTheme, normalizeTheme } from "./theme.js";
 
@@ -15,15 +15,24 @@ import { DEFAULT_THEME, THEME_NAMES, isValidTheme, normalizeTheme } from "./them
  * An explicit flag is validated strictly (a typo should fail loudly). A saved
  * value that is no longer valid only warns and falls back, so a stale
  * state file can never lock the user out of every command.
+ *
+ * @param {string|undefined} flagValue value of the `--translation` flag
+ * @param {string|undefined} stateValue the saved translation
+ * @param {(message: string) => void} [warn] called when a fallback is used
+ * @returns {string} the translation code to use
  */
 export function resolveTranslation(flagValue, stateValue, warn = () => {}) {
   if (flagValue !== undefined) {
     const code = normalizeTranslation(flagValue);
     if (!code) {
-      throw new UsageError(`--translation requires a translation code. Supported: ${translationCodes()}`);
+      throw new UsageError(
+        `--translation requires a translation code. Supported: ${translationCodes()}`,
+      );
     }
     if (!isSupportedTranslation(code)) {
-      throw new UsageError(`Unknown translation: ${code}. Supported translations: ${translationCodes()}`);
+      throw new UsageError(
+        `Unknown translation: ${code}. Supported translations: ${translationCodes()}`,
+      );
     }
     return code;
   }
@@ -43,12 +52,19 @@ export function resolveTranslation(flagValue, stateValue, warn = () => {}) {
  * Resolve the theme for this invocation.
  *
  * Precedence: `--theme` flag, then the saved state, then the default theme.
+ *
+ * @param {string|undefined} flagValue value of the `--theme` flag
+ * @param {string|undefined} stateValue the saved theme
+ * @param {(message: string) => void} [warn] called when a fallback is used
+ * @returns {string} the theme name to use
  */
 export function resolveTheme(flagValue, stateValue, warn = () => {}) {
   if (flagValue !== undefined) {
     const theme = normalizeTheme(flagValue);
     if (!theme) {
-      throw new UsageError(`Unknown theme: ${flagValue}. Available themes: ${THEME_NAMES.join(", ")}`);
+      throw new UsageError(
+        `Unknown theme: ${flagValue}. Available themes: ${THEME_NAMES.join(", ")}`,
+      );
     }
     return theme;
   }

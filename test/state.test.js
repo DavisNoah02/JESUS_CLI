@@ -22,7 +22,7 @@ test("round-trips settings through save and load", async () => {
     scrollPosition: 5,
     activePanel: 1,
     theme: "Midnight",
-    translation: "WEB"
+    translation: "WEB",
   };
   await save(custom, { path });
   assert.deepEqual(await load({ path }), custom);
@@ -60,28 +60,34 @@ test("defaultDataDir resolves per platform and env", () => {
   assert.equal(defaultDataDir({ platform: "linux", env: { XDG_DATA_HOME: "/xdg" } }), "/xdg");
   assert.equal(
     defaultDataDir({ platform: "darwin", env: {} }),
-    join(homedir(), "Library", "Application Support")
+    join(homedir(), "Library", "Application Support"),
   );
-  assert.equal(defaultDataDir({ platform: "win32", env: {} }), join(homedir(), "AppData", "Roaming"));
-  assert.equal(defaultDataDir({ platform: "win32", env: { APPDATA: "C:\\appdata" } }), "C:\\appdata");
+  assert.equal(
+    defaultDataDir({ platform: "win32", env: {} }),
+    join(homedir(), "AppData", "Roaming"),
+  );
+  assert.equal(
+    defaultDataDir({ platform: "win32", env: { APPDATA: "C:\\appdata" } }),
+    "C:\\appdata",
+  );
 });
 
 test("JESUS_CLI_DATA_DIR overrides every platform default", () => {
   assert.equal(
     defaultDataDir({ platform: "linux", env: { JESUS_CLI_DATA_DIR: "/custom" } }),
-    "/custom"
+    "/custom",
   );
   assert.equal(
     defaultDataDir({ platform: "darwin", env: { JESUS_CLI_DATA_DIR: "/custom" } }),
-    "/custom"
+    "/custom",
   );
   assert.equal(
     defaultDataDir({ platform: "win32", env: { JESUS_CLI_DATA_DIR: "/custom" } }),
-    "/custom"
+    "/custom",
   );
   assert.equal(
     defaultDataDir({ platform: "linux", env: { JESUS_CLI_DATA_DIR: "", XDG_DATA_HOME: "/xdg" } }),
-    "/xdg"
+    "/xdg",
   );
 });
 

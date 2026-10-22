@@ -382,13 +382,41 @@ These are the rules this project follows. Deviating from them needs a good reaso
 12. **Milestone branches.** `milestone/<n>-<slug>` and `feature/<slug>` off `main`; PR back into `main`.
 13. **Ship behind a flag.** New capabilities land disabled or opt-in, then get promoted.
 
-### Tooling gaps in these practices
+### Tooling — **added in M10**
 
-There is currently **no linter, no formatter, and no type checker** configured, so conventions above are enforced by review alone. Adding them is a §10 priority:
+Quality is now machine-enforced. The conventions above are checked by CI, not by review.
 
-- **ESLint** (flat config) — recommended rules: `no-unused-vars`, `eqeqeq`, `prefer-const`, `no-console`.
-- **Prettier** — 2-space indent, double quotes, semicolons, 80 columns (matches existing style).
-- **TypeScript** in `checkJs` mode first — `src/api/types.js` already carries JSDoc typedefs, so `tsc --noEmit --checkJs` would type the whole project without a migration. Full `.ts` migration is a later decision.
+| Tool | Version | Config | Command |
+| --- | --- | --- | --- |
+| ESLint | `^10.13.0` | `eslint.config.js` (flat) | `npm run lint` |
+| Prettier | `^3.9.10` | `.prettierrc.json` | `npm run format:check` |
+| TypeScript | `^5.9.3` | `tsconfig.json` | `npm run typecheck` |
+
+All three, plus the tests, run under `npm run check`.
+
+**ESLint** uses `js.configs.recommended` plus `no-unused-vars`, `eqeqeq`, `prefer-const`,
+and `no-var`, with `globals.node` for the runtime globals. `no-control-regex` is off for
+`test/`, where matching real ANSI escape sequences is the point of the assertion.
+
+**Prettier** uses `printWidth: 100`. The default of 80 was rejected: the existing source
+already ran to 132 characters, and 100 produces a reformat diff roughly 2.5x smaller
+(172 changed lines against 440). `data/` is ignored — the bundled KJV is a 4.7 MB
+generated file that must never be reformatted.
+
+**TypeScript** runs in `checkJs` mode over `src/` and `test/`, with `strict: true` and
+`noImplicitAny: false`. That combination is deliberate:
+
+- `strict: true` gives `strictNullChecks`, which is the part that catches real bugs.
+- `noImplicitAny: false` avoids demanding a full parameter type on every function on day
+  one. Turning it on later is a single-line change, and the remaining 163 errors are a
+  known, tractable backlog.
+- The project stays plain JavaScript. `src/api/types.js` holds the JSDoc typedefs; a
+  full `.ts` migration remains a later decision.
+
+The type checker earned its place immediately: it found 7 real defects that the test
+suite passed straight over, including two `warn(...)` calls whose third parameter was
+never declared in the JSDoc, and a `BOOKS` constant whose inferred type was
+`string | number | string[]` — a bug waiting to happen in the alias lookup.
 
 ---
 
@@ -507,15 +535,20 @@ Verified rejections:
 
 **Fix:** split the KJV data per book, or store it pre-indexed, and lazily build the search index only when `search` runs.
 
-### K. No linter, formatter, or type checker — **medium**
+### K. No linter, formatter, or type checker — **fixed in M10**
 
-See §9. There is a stray indentation artifact at `src/logger.js:17` that a formatter would have caught.
+See §9. The stray indentation artifact at `src/logger.js:17` is gone, and CI now fails on
+a lint, format, or type error.
 
-### L. Node version support is stale — **low**
+### L. Node version support is stale — **fixed in M10**
 
 CI runs Node 18 / 20 / 22; 18 and 20 are both EOL. `engines` still says `>=18`.
 
 **Fix:** `engines: { node: ">=22" }`, CI matrix `[22, 24]`.
+
+> **Fixed in M10.** `engines` is `>=22`, CI runs `[22, 24]`, and the release workflow
+> moved from Node 20 to Node 22. `package-lock.json` is now committed and CI installs
+> with `npm ci`.
 
 ### M. `main` is behind the feature branches — **process**
 

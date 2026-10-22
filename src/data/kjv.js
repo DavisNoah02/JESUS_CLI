@@ -53,7 +53,7 @@ export async function getVerses(reference) {
 
 async function getVerseIndex() {
   if (!verseIndex) {
-    const data = await loadKjv();
+    await loadKjv();
     verseIndex = [];
     for (const book of BOOKS) {
       const entry = kjvByName.get(book.name);
@@ -94,7 +94,7 @@ export async function search(query, limit = 50) {
 
 async function getBookLayout() {
   if (!bookLayout) {
-    const data = await loadKjv();
+    await loadKjv();
     bookLayout = BOOKS.map((book) => {
       const entry = kjvByName.get(book.name);
       return {

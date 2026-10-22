@@ -7,7 +7,7 @@ import {
   listTranslations,
   normalizeTranslation,
   translationCodes,
-  translationName
+  translationName,
 } from "../src/api/translations.js";
 
 test("normalizes casing and whitespace", () => {

@@ -15,11 +15,17 @@ export function printResult(value) {
 }
 
 export function printError(value, theme) {
-  const styled = paint(value, "error", { enabled: shouldUseColor({ stream: process.stderr }), theme });
+  const styled = paint(value, "error", {
+    enabled: shouldUseColor({ stream: process.stderr }),
+    theme,
+  });
   process.stderr.write(`${styled}\n`);
 }
 
 export function printWarning(value, theme) {
-  const styled = paint(value, "warning", { enabled: shouldUseColor({ stream: process.stderr }), theme });
+  const styled = paint(value, "warning", {
+    enabled: shouldUseColor({ stream: process.stderr }),
+    theme,
+  });
   process.stderr.write(`${styled}\n`);
 }

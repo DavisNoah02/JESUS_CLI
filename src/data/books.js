@@ -1,6 +1,16 @@
 import { BookNotFoundError } from "../errors.js";
 
-export const BOOKS = [
+/**
+ * @typedef {object} Book
+ * @property {number} number canonical position, 1-based
+ * @property {number} bollsId identifier used by the Bolls API
+ * @property {string} name canonical English name
+ * @property {string[]} aliases alternative names and abbreviations
+ * @property {number} chapters number of chapters in the book
+ */
+
+/** @type {[string, string[], number][]} */
+const BOOK_SOURCE = [
   ["Genesis", ["gen"], 50],
   ["Exodus", ["exod", "exo"], 40],
   ["Leviticus", ["lev"], 27],
@@ -67,7 +77,10 @@ export const BOOKS = [
   ["3 John", ["3 jn", "3john", "3 jo"], 1],
   ["Jude", [], 1],
   ["Revelation", ["revelations", "rev"], 22]
-].map(([name, aliases, chapters], index) => ({
+];
+
+/** @type {Book[]} */
+export const BOOKS = BOOK_SOURCE.map(([name, aliases, chapters], index) => ({
   number: index + 1,
   bollsId: index + 1,
   name,

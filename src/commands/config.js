@@ -1,4 +1,8 @@
-import { isSupportedTranslation, normalizeTranslation, translationCodes } from "../api/translations.js";
+import {
+  isSupportedTranslation,
+  normalizeTranslation,
+  translationCodes,
+} from "../api/translations.js";
 import { UsageError } from "../errors.js";
 import { printResult } from "../logger.js";
 import { save } from "../store/state.js";
@@ -29,10 +33,14 @@ function validateSetting(key, value) {
   if (key === "translation") {
     const code = normalizeTranslation(value);
     if (!code) {
-      throw new UsageError(`Unknown translation: ${value}. Supported translations: ${translationCodes()}`);
+      throw new UsageError(
+        `Unknown translation: ${value}. Supported translations: ${translationCodes()}`,
+      );
     }
     if (!isSupportedTranslation(code)) {
-      throw new UsageError(`Unknown translation: ${code}. Supported translations: ${translationCodes()}`);
+      throw new UsageError(
+        `Unknown translation: ${code}. Supported translations: ${translationCodes()}`,
+      );
     }
     return code;
   }
