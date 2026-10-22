@@ -76,7 +76,7 @@ const BOOK_SOURCE = [
   ["2 John", ["2 jn", "2john", "2 jo"], 1],
   ["3 John", ["3 jn", "3john", "3 jo"], 1],
   ["Jude", [], 1],
-  ["Revelation", ["revelations", "rev"], 22]
+  ["Revelation", ["revelations", "rev"], 22],
 ];
 
 /** @type {Book[]} */
@@ -85,7 +85,7 @@ export const BOOKS = BOOK_SOURCE.map(([name, aliases, chapters], index) => ({
   bollsId: index + 1,
   name,
   aliases,
-  chapters
+  chapters,
 }));
 
 function normalizeKey(value) {
@@ -93,7 +93,7 @@ function normalizeKey(value) {
 }
 
 const bookLookup = new Map(
-  BOOKS.flatMap((book) => [book.name, ...book.aliases].map((value) => [normalizeKey(value), book]))
+  BOOKS.flatMap((book) => [book.name, ...book.aliases].map((value) => [normalizeKey(value), book])),
 );
 
 export function getBook(value) {

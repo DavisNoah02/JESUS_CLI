@@ -27,7 +27,7 @@ export function parseReference(value) {
 
   if (chapter < 1 || chapter > book.chapters) {
     throw new ReferenceParseError(
-      `${book.name} has ${book.chapters} chapter${book.chapters === 1 ? "" : "s"}, but chapter ${chapter} was requested`
+      `${book.name} has ${book.chapters} chapter${book.chapters === 1 ? "" : "s"}, but chapter ${chapter} was requested`,
     );
   }
 
@@ -39,6 +39,6 @@ export function parseReference(value) {
     book: book.name,
     chapter,
     verseStart,
-    verseEnd
+    verseEnd,
   };
 }

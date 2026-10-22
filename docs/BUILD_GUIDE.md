@@ -4,7 +4,7 @@ Implementation and build notes for the Node.js version of Jesus CLI — a termin
 
 This guide is the source of truth for how to build, run, test, and ship the project. It is verified against the working tree, not aspirational.
 
-**Related:** [MILESTONES.md](MILESTONES.md) — the local reference for the remaining milestones (M7–M12), including the scope, decisions, and exit criteria. That file is **git-ignored** and therefore not part of the repository or the published package; anything that must ship belongs in this guide or in `CHANGELOG.md`.
+**Related:** [MILESTONES.md](MILESTONES.md) — the reference for the remaining milestones (M8–M12), including the scope, decisions, and exit criteria. It ships with the package, alongside this guide and `CHANGELOG.md`.
 
 ---
 
@@ -22,18 +22,18 @@ Verified by running the working tree. Last checked: Node v24.18.0 / npm 12.0.1.
 
 ### Working today (verified by execution)
 
-| Capability | Command | Notes |
-| --- | --- | --- |
-| Single verse | `Jesus read "John 3:16"` | Offline, from bundled KJV |
-| Verse range | `Jesus read "Psalm 23:1-6"` | Offline |
-| Whole chapter | `Jesus read "John 3"` | Offline |
-| Text search | `Jesus search "faith"` | KJV only, capped at 50 hits |
-| Random verse | `Jesus random` | Offline |
-| Verse of the day | `Jesus today` | Offline, stable per UTC date |
-| Version | `Jesus --version` / `-V` | Reads `package.json` |
-| Help | `Jesus --help` / `-h` | |
-| Aliases | `Jn 3:16`, `1 Cor 13`, `Ps 23:1` | 66 canonical books |
-| Error handling | bad reference / bad command | stderr + exit code 1 |
+| Capability       | Command                          | Notes                        |
+| ---------------- | -------------------------------- | ---------------------------- |
+| Single verse     | `Jesus read "John 3:16"`         | Offline, from bundled KJV    |
+| Verse range      | `Jesus read "Psalm 23:1-6"`      | Offline                      |
+| Whole chapter    | `Jesus read "John 3"`            | Offline                      |
+| Text search      | `Jesus search "faith"`           | KJV only, capped at 50 hits  |
+| Random verse     | `Jesus random`                   | Offline                      |
+| Verse of the day | `Jesus today`                    | Offline, stable per UTC date |
+| Version          | `Jesus --version` / `-V`         | Reads `package.json`         |
+| Help             | `Jesus --help` / `-h`            |                              |
+| Aliases          | `Jn 3:16`, `1 Cor 13`, `Ps 23:1` | 66 canonical books           |
+| Error handling   | bad reference / bad command      | stderr + exit code 1         |
 
 ### Implemented but **not reachable from the CLI** (see §10)
 
@@ -77,7 +77,7 @@ Runtime is ~5–9s, dominated by the live network tests against `bolls.life`. Ne
 ### 4.1 From a local checkout
 
 ```bash
-cd /home/neo/Projects/JESUS_CLI
+cd /path/to/JESUS_CLI
 npm install     # no runtime deps; prepares the workspace and lockfile
 npm test        # 65 tests
 ```
@@ -100,7 +100,7 @@ npm run start -- read "John 3:16"
 ### 4.2 As a linked global command
 
 ```bash
-cd /home/neo/Projects/JESUS_CLI
+cd /path/to/JESUS_CLI
 npm link
 Jesus read "John 3:16"
 ```
@@ -120,12 +120,12 @@ Jesus read "John 3:16"
 
 ### 4.4 Environment variables
 
-| Variable | Effect |
-| --- | --- |
-| `NO_COLOR` | Any non-empty value disables ANSI color output. |
-| `TERM=dumb` | Disables color output. |
-| `XDG_DATA_HOME` | Overrides the Linux data directory (default `~/.local/share`). |
-| `APPDATA` | Overrides the Windows data directory (default `~/AppData/Roaming`). |
+| Variable             | Effect                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `NO_COLOR`           | Any non-empty value disables ANSI color output.                                                               |
+| `TERM=dumb`          | Disables color output.                                                                                        |
+| `XDG_DATA_HOME`      | Overrides the Linux data directory (default `~/.local/share`).                                                |
+| `APPDATA`            | Overrides the Windows data directory (default `~/AppData/Roaming`).                                           |
 | `JESUS_CLI_DATA_DIR` | Overrides the data directory outright, for tests and CI. Takes precedence over `XDG_DATA_HOME` and `APPDATA`. |
 
 macOS always uses `~/Library/Application Support`.
@@ -144,8 +144,8 @@ Errors go to stderr with exit code 1. Early-closing pipes (`| head -1`) are hand
 
 The full release guide — preconditions, the verification procedure, versioning policy, and
 the tag-timing recommendation — lives in [MILESTONES.md](MILESTONES.md) under
-"Release guide". That file is git-ignored, so the condensed version is repeated here for
-anyone working from a fresh clone.
+"Release guide". The condensed version is repeated here for anyone working from a fresh
+clone.
 
 **The user-facing promise, which every release must make work:**
 
@@ -155,18 +155,23 @@ Jesus random
 ```
 
 The command is capitalised `Jesus` on purpose (decision D9 in [MILESTONES.md](MILESTONES.md)).
-The *package* name is lowercase `jesus-cli` because npm requires it. Users who prefer
+The _package_ name is lowercase `jesus-cli` because npm requires it. Users who prefer
 lowercase can use `npx jesus-cli random` — no second bin entry is needed or wanted.
 
-**Preconditions before the first publish:**
+**Release preconditions (all met as of Milestone 11):**
 
-| Blocker | Fix |
-| --- | --- |
-| Package name `Jesus-cli` is rejected by npm (mixed case) | Rename to `jesus-cli` |
-| No `LICENSE` | Add the MIT text |
-| No npm metadata | Add `license`, `repository`, `author`, `keywords`, `homepage`, `bugs` |
-| `docs/` not packaged | Add `"docs"` to `files` |
-| `npm publish --provenance \|\| echo "…"` swallows auth failures | Tolerate only `EPUBLISHCONFLICT` |
+| Precondition                | Status                                                                        |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| Package name is publishable | `jesus-cli` is lowercase and free on npm                                      |
+| `LICENSE`                   | MIT text present; `license: "MIT"` in `package.json`                          |
+| npm metadata                | `license`, `repository`, `author`, `keywords`, `homepage`, `bugs` all present |
+| Docs ship in the tarball    | `docs`, `CHANGELOG.md`, `LICENSE` are in `files`                              |
+| Publish failures surfaced   | Only `EPUBLISHCONFLICT` is tolerated; auth errors fail the job                |
+| KJV data unmodified         | `data/kjv.json` SHA-256 is unchanged after formatting                         |
+
+The only thing still needed is credentials, which are not in the repo: the `NPM_TOKEN`
+secret and the `PUBLISH_TO_NPM` variable. See the release guide for the field-by-field
+setup and troubleshooting table.
 
 **Procedure:**
 
@@ -175,7 +180,7 @@ lowercase can use `npx jesus-cli random` — no second bin entry is needed or wa
 3. `npx validate-npm-package-name jesus-cli` — must report `validForNewPackages: true`.
 4. `npm install --global . && Jesus random` — verify the real user journey locally, then uninstall.
 5. `git tag -a v0.1.0 -m "Release v0.1.0" && git push origin main --tags` — this triggers `.github/workflows/release.yml`.
-6. Publish is a separate workflow job, gated on the repository variable `PUBLISH_TO_NPM=true`.
+6. Publish is a separate workflow job, gated on the repository variable `PUBLISH_TO_NPM=true` and the `NPM_TOKEN` secret. Set both **before** pushing the tag.
 7. `npm view jesus-cli versions` and `npm install --global jesus-cli && Jesus random` — verify the published package.
 
 **Tag timing:** do **not** tag before M11. The package cannot be published until the name,
@@ -191,10 +196,12 @@ installs nothing. Cut `v0.1.0` immediately after M11, then `v0.2.0` after M8–M
 ```
 .
 ├── data/
-│   └── kjv.json              # bundled KJV: 66 books, 1,189 chapters, 31,102 verses (4.7 MB)
+│   ├── kjv.json              # bundled KJV: 66 books, 1,189 chapters, 31,102 verses (4.7 MB)
+│   └── README.md             # KJV provenance, SHA-256, and licensing rules
 ├── docs/
 │   ├── BUILD_GUIDE.md        # this file
-│   └── MILESTONES.md         # M7–M12 reference (git-ignored, local only)
+│   ├── MANUAL_TESTING.md     # the manual test checklist
+│   └── MILESTONES.md         # M8–M12 scope, decisions, and exit criteria
 ├── src/
 │   ├── cli.js                # entry point: flag parsing, dispatch, error taxonomy
 │   ├── args.js               # flag parser (--key value, --key=value, booleans, --)
@@ -386,11 +393,11 @@ These are the rules this project follows. Deviating from them needs a good reaso
 
 Quality is now machine-enforced. The conventions above are checked by CI, not by review.
 
-| Tool | Version | Config | Command |
-| --- | --- | --- | --- |
-| ESLint | `^10.13.0` | `eslint.config.js` (flat) | `npm run lint` |
-| Prettier | `^3.9.10` | `.prettierrc.json` | `npm run format:check` |
-| TypeScript | `^5.9.3` | `tsconfig.json` | `npm run typecheck` |
+| Tool       | Version    | Config                    | Command                |
+| ---------- | ---------- | ------------------------- | ---------------------- |
+| ESLint     | `^10.13.0` | `eslint.config.js` (flat) | `npm run lint`         |
+| Prettier   | `^3.9.10`  | `.prettierrc.json`        | `npm run format:check` |
+| TypeScript | `^5.9.3`   | `tsconfig.json`           | `npm run typecheck`    |
 
 All three, plus the tests, run under `npm run check`.
 
@@ -478,7 +485,7 @@ There is no `--json`, `--format json`, or `--no-color` flag. The README claims s
 - No `LICENSE` file, although the README states MIT.
 - `package.json` has no `license`, `repository`, `author`, `keywords`, `homepage`, or `bugs` fields.
 - `files` does not include `docs/`.
-- The release workflow's `npm publish --provenance || echo "…"` swallows *every* publish failure, including authentication and permission errors. It should only tolerate the specific "already published" conflict.
+- The release workflow's `npm publish --provenance || echo "…"` swallows _every_ publish failure, including authentication and permission errors. It should only tolerate the specific "already published" conflict.
 - The package name `Jesus-cli` is mixed case and **cannot be published**. npm rejects new packages whose name contains capital letters. Verified with `validate-npm-package-name`:
 
   ```
@@ -487,18 +494,19 @@ There is no `--json`, `--format json`, or `--no-color` flag. The README claims s
   ```
 
   Rename to `jesus-cli`. The `bin` key stays capitalised as `Jesus` — that is a deliberate product decision (D9), not an oversight, and it should not be "corrected" to lowercase.
+
 - The `bin` script `src/cli.js` is not marked executable in git; npm sets the bit on install, but `git update-index --chmod=+x src/cli.js` is safer.
 
 ### F. Reference parser is too strict for real-world input — **medium**
 
 Verified rejections:
 
-| Input | Result |
-| --- | --- |
-| `1co 13:4-7` | rejected — `1co` is not an alias (`1 cor`, `1cor`, `1 co` are) |
-| `Jn 3.16` | rejected — dot separator unsupported |
-| `John 3:16-4:2` | rejected — cross-chapter ranges unsupported |
-| `John 3:16b` | rejected — suffix letters unsupported |
+| Input           | Result                                                         |
+| --------------- | -------------------------------------------------------------- |
+| `1co 13:4-7`    | rejected — `1co` is not an alias (`1 cor`, `1cor`, `1 co` are) |
+| `Jn 3.16`       | rejected — dot separator unsupported                           |
+| `John 3:16-4:2` | rejected — cross-chapter ranges unsupported                    |
+| `John 3:16b`    | rejected — suffix letters unsupported                          |
 
 **Fix:** add compact aliases (`1co`, `2co`, `1th`, `1ti`, `1pe`, …), accept `.` as a chapter/verse separator, and support cross-chapter ranges.
 
@@ -550,9 +558,9 @@ CI runs Node 18 / 20 / 22; 18 and 20 are both EOL. `engines` still says `>=18`.
 > moved from Node 20 to Node 22. `package-lock.json` is now committed and CI installs
 > with `npm ci`.
 
-### M. `main` is behind the feature branches — **process**
+### M. `main` is behind the feature branches — **fixed**
 
-`main` is at `ea028a5`. The state, cache, and theme work (`a762edb`, `9502b4a`) lives only on `feature/state-cache-theme` and `origin/state-cache` and has never been merged. `main`'s README and this guide still describe the pre-cache milestone, and `main`'s guide contains a stale path (`/home/neo/Projects/JESUS_CLI/node`).
+The state, cache, and theme work (`a762edb`, `9502b4a`) lived only on `feature/state-cache-theme` and was never merged. It was merged in PR #3, the CLI wiring in PR #4, and `main` is now the trunk for every milestone.
 
 **Fix:** merge the feature branch into `main` and re-verify.
 
@@ -568,7 +576,7 @@ CI runs Node 18 / 20 / 22; 18 and 20 are both EOL. `engines` still says `>=18`.
 
 Milestones 1–6 (core data layer, `read`, `search`/`random`/`today`, Bolls API, state, cache, themes) are code-complete. The problem is not missing features — it is that the completed features are **not connected to the user**.
 
-The next milestones are therefore ordered by *user-visible value*, not by layer.
+The next milestones are therefore ordered by _user-visible value_, not by layer.
 
 ### Milestone 7 — Wire the layers (make existing features real) — **complete**
 
