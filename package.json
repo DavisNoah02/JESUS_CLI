@@ -1,7 +1,24 @@
 {
-  "name": "Jesus-cli",
+  "name": "jesus-cli",
   "version": "0.1.0",
   "description": "Read the Bible in your terminal with a Node.js CLI.",
+  "keywords": [
+    "bible",
+    "kjv",
+    "cli",
+    "command-line",
+    "terminal",
+    "scripture",
+    "devtools"
+  ],
+  "homepage": "https://github.com/DavisNoah02/JESUS_CLI#readme",
+  "bugs": "https://github.com/DavisNoah02/JESUS_CLI/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavisNoah02/JESUS_CLI.git"
+  },
+  "license": "MIT",
+  "author": "noah_dave <m.davenoa@gmail.com>",
   "type": "module",
   "bin": {
     "Jesus": "./src/cli.js"
@@ -22,7 +39,10 @@
   "files": [
     "src",
     "data",
-    "README.md"
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",

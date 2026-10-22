@@ -8,16 +8,35 @@ Built with Node.js + ESM. Works offline with bundled KJV data. Planned to grow t
 
 ## Install
 
-Not published to npm yet. From a local checkout (repo root):
+```bash
+npm install --global jesus-cli
+Jesus read "John 3:16"
+```
+
+That is the whole contract: one global install, and the `Jesus` command is on your path.
+
+The package name is lowercase `jesus-cli` because npm requires a lowercase name. The
+**executable is capitalised** — `Jesus`, not `jesus`. If you would rather type it in
+lowercase, `npx jesus-cli read "John 3:16"` works without installing anything.
+
+Requires Node.js 22 or newer.
+
+<details>
+<summary>Install from a local checkout</summary>
 
 ```bash
-cd /home/JESUS_CLI
+git clone https://github.com/DavisNoah02/JESUS_CLI.git
+cd JESUS_CLI
 npm install
 npm link
 ```
 
-This gives you the `Jesus` command. The full setup, architecture notes, and the release
-procedure are maintained locally in the `docs/` folder, which is not published.
+</details>
+
+## Documentation
+
+The build guide, the milestone reference, and the manual test checklist ship with the
+package, under `docs/`.
 
 ## Usage
 
@@ -106,8 +125,8 @@ invocation only; use `config set` to change the saved default.
 
 ## Current status
 
-Milestone 7 is complete: the Bolls API, the translation cache, state persistence, and the
-theme layer are all reachable from the command line.
+Milestone 11 is complete: the package is ready for its first release, `v0.1.0`. Once that
+release is published, install it with `npm install --global jesus-cli`.
 
 Working today:
 
@@ -130,7 +149,6 @@ Planned next:
 - search pagination and total match counts
 - interactive terminal UI
 - translation picker and install management
-- publication and packaging polish
 
 ## Features
 
@@ -166,11 +184,11 @@ Planned next:
 - Milestone 8 — developer-grade output (`--json`, pagination, `books`)
 - Milestone 9 — reference parsing and lookup quality
 - Milestone 10 — lint, format, and type-check baseline — complete
-- Milestone 11 — publish to npm
+- Milestone 11 — publish to npm — complete
 - Milestone 12 — terminal UI
 
-The full roadmap, exit criteria, and known-gaps audit are maintained in the local `docs/`
-folder, which is kept out of the repository and out of the published package.
+The full roadmap, exit criteria, and known-gaps audit are maintained in the `docs/` folder,
+which ships with the package.
 
 ## License
 

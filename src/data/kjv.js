@@ -32,7 +32,7 @@ export async function getChapter(bookValue, chapterNumber) {
 
   return chapter.verses.map((verse) => ({
     verse: Number(verse.verse),
-    text: verse.text
+    text: verse.text,
   }));
 }
 
@@ -44,7 +44,7 @@ export async function getVerses(reference) {
 
   if (verses.length !== end - start + 1) {
     throw new VerseNotFoundError(
-      `Verse not found: ${reference.book} ${reference.chapter}:${start}-${end}`
+      `Verse not found: ${reference.book} ${reference.chapter}:${start}-${end}`,
     );
   }
 
@@ -67,7 +67,7 @@ async function getVerseIndex() {
             chapter,
             verse: Number(storedVerse.verse),
             text,
-            lower: text.toLowerCase()
+            lower: text.toLowerCase(),
           });
         }
       }
@@ -100,7 +100,7 @@ async function getBookLayout() {
       return {
         name: book.name,
         chapters: book.chapters,
-        chapterVerseCounts: entry ? entry.chapters.map((stored) => stored.verses.length) : []
+        chapterVerseCounts: entry ? entry.chapters.map((stored) => stored.verses.length) : [],
       };
     });
   }
@@ -113,12 +113,12 @@ async function pickVerseBySeed(seed) {
   const layout = await getBookLayout();
 
   const book = layout[seed % layout.length];
-  const chapter = Math.floor(seed / 7) % book.chapters + 1;
+  const chapter = (Math.floor(seed / 7) % book.chapters) + 1;
   const verseCount = book.chapterVerseCounts[chapter - 1] ?? 0;
   const verse = verseCount > 0 ? (Math.floor(seed / 13) % verseCount) + 1 : 1;
 
   const item = index.find(
-    (entry) => entry.book === book.name && entry.chapter === chapter && entry.verse === verse
+    (entry) => entry.book === book.name && entry.chapter === chapter && entry.verse === verse,
   );
   if (!item) {
     throw new VerseNotFoundError(`Verse not found: ${book.name} ${chapter}:${verse}`);
