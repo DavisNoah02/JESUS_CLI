@@ -9,15 +9,16 @@ Built with Node.js + ESM. Works offline with bundled KJV data. Planned to grow t
 ## Install
 
 ```bash
-npm install --global jesus-cli
+npm install --global @noah_dave/jesus-cli
 Jesus read "John 3:16"
 ```
 
 That is the whole contract: one global install, and the `Jesus` command is on your path.
 
-The package name is lowercase `jesus-cli` because npm requires a lowercase name. The
-**executable is capitalised** — `Jesus`, not `jesus`. If you would rather type it in
-lowercase, `npx jesus-cli read "John 3:16"` works without installing anything.
+The package is scoped as `@noah_dave/jesus-cli` because npm rejects the unscoped name as
+too similar to an existing package. The **executable is capitalised** — `Jesus`, not
+`jesus`. If you would rather type it in lowercase,
+`npx @noah_dave/jesus-cli read "John 3:16"` works without installing anything.
 
 Requires Node.js 22 or newer.
 
@@ -126,7 +127,7 @@ invocation only; use `config set` to change the saved default.
 ## Current status
 
 Milestone 11 is complete: the package is ready for its first release, `v0.1.0`. Once that
-release is published, install it with `npm install --global jesus-cli`.
+release is published, install it with `npm install --global @noah_dave/jesus-cli`.
 
 Working today:
 

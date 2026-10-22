@@ -298,12 +298,12 @@ machine:
 npm install --global .
 Jesus random
 Jesus read "John 3:16"
-npm uninstall --global jesus-cli
+npm uninstall --global @noah_dave/jesus-cli
 ```
 
 The command is capitalised `Jesus` on purpose. Users who prefer lowercase can use
-`npx jesus-cli random`. Do not rename the binary, and do not add a lowercase alias —
-that is a settled decision (D9 in `docs/MILESTONES.md`).
+`npx @noah_dave/jesus-cli random`. Do not rename the binary, and do not add a lowercase
+alias — that is a settled decision (D9 in `docs/MILESTONES.md`).
 
 Then follow the release procedure in `docs/BUILD_GUIDE.md` §4.6.
 

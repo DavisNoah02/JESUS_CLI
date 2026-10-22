@@ -107,16 +107,18 @@ Jesus read "John 3:16"
 
 `npm link` writes into your global npm prefix, which may require elevated permissions. `npm link --no-audit --no-fund` avoids a needless network round-trip on a zero-dependency project.
 
-To unlink: `npm unlink -g Jesus-cli`.
+To unlink: `npm unlink -g @noah_dave/jesus-cli`.
 
 ### 4.3 From npm (after publishing)
 
 ```bash
-npm install -g jesus-cli
+npm install -g @noah_dave/jesus-cli
 Jesus read "John 3:16"
 ```
 
-> The package has not been published yet. Its current `name` field (`Jesus-cli`) is rejected by npm for new packages — npm requires lowercase. It must be renamed to `jesus-cli` before the first publish; see §10-E.
+> The unscoped name `jesus-cli` is rejected by npm — both for capitals (`Jesus-cli`) and,
+> once lowercased, as "too similar to existing package jest-cli". The package is therefore
+> scoped as `@noah_dave/jesus-cli`; see §10-E.
 
 ### 4.4 Environment variables
 
@@ -150,24 +152,25 @@ clone.
 **The user-facing promise, which every release must make work:**
 
 ```bash
-npm install --global jesus-cli
+npm install --global @noah_dave/jesus-cli
 Jesus random
 ```
 
 The command is capitalised `Jesus` on purpose (decision D9 in [MILESTONES.md](MILESTONES.md)).
-The _package_ name is lowercase `jesus-cli` because npm requires it. Users who prefer
-lowercase can use `npx jesus-cli random` — no second bin entry is needed or wanted.
+The _package_ is scoped as `@noah_dave/jesus-cli` because npm rejects the unscoped name
+(D10). Users who prefer lowercase can use `npx @noah_dave/jesus-cli random` — no second bin
+entry is needed or wanted.
 
 **Release preconditions (all met as of Milestone 11):**
 
-| Precondition                | Status                                                                        |
-| --------------------------- | ----------------------------------------------------------------------------- |
-| Package name is publishable | `jesus-cli` is lowercase and free on npm                                      |
-| `LICENSE`                   | MIT text present; `license: "MIT"` in `package.json`                          |
-| npm metadata                | `license`, `repository`, `author`, `keywords`, `homepage`, `bugs` all present |
-| Docs ship in the tarball    | `docs`, `CHANGELOG.md`, `LICENSE` are in `files`                              |
-| Publish failures surfaced   | Only `EPUBLISHCONFLICT` is tolerated; auth errors fail the job                |
-| KJV data unmodified         | `data/kjv.json` SHA-256 is unchanged after formatting                         |
+| Precondition                | Status                                                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------------- |
+| Package name is publishable | Scoped `@noah_dave/jesus-cli`; unscoped `jesus-cli` is blocked as too similar to `jest-cli` |
+| `LICENSE`                   | MIT text present; `license: "MIT"` in `package.json`                                        |
+| npm metadata                | `license`, `repository`, `author`, `keywords`, `homepage`, `bugs` all present               |
+| Docs ship in the tarball    | `docs`, `CHANGELOG.md`, `LICENSE` are in `files`                                            |
+| Publish failures surfaced   | Only `EPUBLISHCONFLICT` is tolerated; auth errors fail the job                              |
+| KJV data unmodified         | `data/kjv.json` SHA-256 is unchanged after formatting                                       |
 
 The only thing still needed is credentials, which are not in the repo: the `NPM_TOKEN`
 secret and the `PUBLISH_TO_NPM` variable. See the release guide for the field-by-field
@@ -177,11 +180,11 @@ setup and troubleshooting table.
 
 1. `npm test` — must be green.
 2. `npm pack --dry-run` — inspect the tarball contents.
-3. `npx validate-npm-package-name jesus-cli` — must report `validForNewPackages: true`.
+3. `npx validate-npm-package-name @noah_dave/jesus-cli` — must report `validForNewPackages: true`.
 4. `npm install --global . && Jesus random` — verify the real user journey locally, then uninstall.
 5. `git tag -a v0.1.0 -m "Release v0.1.0" && git push origin main --tags` — this triggers `.github/workflows/release.yml`.
-6. Publish is a separate workflow job, gated on the repository variable `PUBLISH_TO_NPM=true` and the `NPM_TOKEN` secret. Set both **before** pushing the tag.
-7. `npm view jesus-cli versions` and `npm install --global jesus-cli && Jesus random` — verify the published package.
+6. Publish is a separate workflow job, gated on the repository variable `PUBLISH_TO_NPM=true` and the `NPM_TOKEN` secret. Set both **before** pushing the tag. If npm rejects a 2FA-bypass token, publish locally with `npm publish --otp=<live code>` and move CI to Trusted Publishing.
+7. `npm view @noah_dave/jesus-cli versions` and `npm install --global @noah_dave/jesus-cli && Jesus random` — verify the published package.
 
 **Tag timing:** do **not** tag before M11. The package cannot be published until the name,
 the LICENSE, and the metadata exist, and the current release workflow turns a publish
@@ -493,7 +496,7 @@ There is no `--json`, `--format json`, or `--no-color` flag. The README claims s
   "jesus-cli" -> { validForNewPackages: true }
   ```
 
-  Rename to `jesus-cli`. The `bin` key stays capitalised as `Jesus` — that is a deliberate product decision (D9), not an oversight, and it should not be "corrected" to lowercase.
+  Lowercasing is not enough: npm rejects the unscoped `jesus-cli` at publish as "too similar to existing package jest-cli". The package is therefore scoped as `@noah_dave/jesus-cli` (D10). The `bin` key stays capitalised as `Jesus` — that is a deliberate product decision (D9), not an oversight, and it should not be "corrected" to lowercase. Note the bin path must be `src/cli.js`, not `./src/cli.js`: npm 12 removes `./`-prefixed bin entries at publish.
 
 - The `bin` script `src/cli.js` is not marked executable in git; npm sets the bit on install, but `git update-index --chmod=+x src/cli.js` is safer.
 
@@ -638,13 +641,13 @@ The next milestones are therefore ordered by _user-visible value_, not by layer.
 **Goal:** publishable and trustworthy.
 
 - Add `LICENSE`, and the `license`/`repository`/`author`/`keywords`/`homepage`/`bugs` fields.
-- Reconcile the package name to lowercase (`jesus-cli`). The executable stays `Jesus` — decision D9.
+- Reconcile the package name: scoped `@noah_dave/jesus-cli` (D10), because npm rejects both the mixed-case and the unscoped lowercase name. The executable stays `Jesus` — decision D9.
 - Add `docs/` to `files`.
 - Fix the release workflow's publish error handling to tolerate only the "already published" conflict.
 - Document KJV data provenance in `data/README.md`.
 - Add `CHANGELOG.md` driven by release notes.
 
-**Exit criteria:** `npm publish --dry-run` produces a clean, correctly-named tarball, and `npm install -g jesus-cli` yields a working `jesus` command.
+**Exit criteria:** `npm publish --dry-run` produces a clean, correctly-named tarball, and `npm install -g @noah_dave/jesus-cli` yields a working `Jesus` command.
 
 > The full release procedure, versioning policy, and tag-timing recommendation are in
 > [MILESTONES.md](MILESTONES.md) → "Release guide", with a condensed copy in §4.6.

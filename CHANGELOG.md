@@ -66,8 +66,9 @@ cut when the package is published.
 
 ### Notes
 
-- The executable is capitalised: `Jesus`. The npm package is `jesus-cli`, because npm
-  requires a lowercase name. `npx jesus-cli …` works if you prefer to type lowercase.
+- The executable is capitalised: `Jesus`. The npm package is scoped as
+  `@noah_dave/jesus-cli` because npm rejects the unscoped name as too similar to an
+  existing package. `npx @noah_dave/jesus-cli …` works if you prefer to type lowercase.
 - The plain-text output format is a public API. `John 3:16 - <text> (KJV)` is what
   people pipe into `grep` and `awk`, and changing it will be a breaking change.
 

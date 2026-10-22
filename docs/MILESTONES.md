@@ -363,8 +363,14 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 ### Scope
 
-- Rename the package to lowercase `jesus-cli`. Verified: `validate-npm-package-name` reports `Jesus-cli` as `validForNewPackages: false` — "name can no longer contain capital letters".
-- **Keep the executable name `Jesus` exactly as it is.** Decision D9: the command is capitalised on purpose, and no lowercase `jesus` alias will be added. Users who prefer to type lowercase can use `npx jesus-cli …`, which npm resolves from the package name regardless of the bin map.
+- Rename the package to lowercase. Verified: `validate-npm-package-name` reports
+  `Jesus-cli` as `validForNewPackages: false` — "name can no longer contain capital
+  letters". The unscoped name `jesus-cli` is then rejected at publish as too similar to
+  `jest-cli`, so the package is scoped: `@noah_dave/jesus-cli` (decision D10).
+- **Keep the executable name `Jesus` exactly as it is.** Decision D9: the command is
+  capitalised on purpose, and no lowercase `jesus` alias will be added. Users who prefer
+  to type lowercase can use `npx @noah_dave/jesus-cli …`, which npm resolves from the
+  package name regardless of the bin map.
 - Add `LICENSE` (MIT) and the `license`, `repository`, `author`, `keywords`, `homepage`, and `bugs` fields to `package.json`.
 - Add `docs/` to the `files` array.
 - Fix the release workflow: `npm publish --provenance || echo "…"` currently swallows _every_ failure, including authentication errors. It must tolerate only the "already published" conflict.
@@ -373,7 +379,10 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 ### What was actually done
 
-- **Package renamed** to `jesus-cli`. The `bin` map is untouched: `{ "Jesus": "./src/cli.js" }`.
+- **Package named** `@noah_dave/jesus-cli`, with `publishConfig.access: "public"`. The
+  `bin` map is untouched apart from dropping the `./` prefix: `{ "Jesus": "src/cli.js" }`.
+  The prefix had to go because npm 12 silently removes `./`-prefixed bin entries at
+  publish, which would have shipped a package with no executable.
 - **`LICENSE`** added (MIT, © 2026 noah_dave), plus `license`, `repository`, `author`,
   `keywords`, `homepage`, and `bugs` in `package.json`.
 - **All docs are tracked and shipped.** `docs/` was git-ignored; the ignore rule is
@@ -391,9 +400,10 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 ### Exit criteria
 
-- [ ] `npm publish --dry-run` produces a correctly-named tarball.
-- [ ] `npm install -g jesus-cli` yields a working `jesus` command on a clean machine.
-- [ ] A failed publish for any reason other than "already published" fails the workflow.
+- [x] `npm publish --dry-run` produces a correctly-named tarball
+      (`noah_dave-jesus-cli-0.1.0.tgz`) with a surviving `bin` entry.
+- [ ] `npm install -g @noah_dave/jesus-cli` yields a working `Jesus` command on a clean machine.
+- [x] A failed publish for any reason other than "already published" fails the workflow.
 
 ---
 
@@ -404,16 +414,16 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 For a release, users install the app globally from npm, then run its executable directly:
 
 ```bash
-npm install --global jesus-cli
+npm install --global @noah_dave/jesus-cli
 Jesus random
 ```
 
 That is the whole contract. Every release must make this exact sequence work on a clean machine, with no local checkout and no build step.
 
-The command is capitalised as `Jesus` on purpose — see decision D9. The _package_ name is
-lowercase `jesus-cli` because npm requires it; the _executable_ is `Jesus`. Users who
-prefer to type lowercase can run `npx jesus-cli random`, which npm resolves from the
-package name without needing a second bin entry.
+The command is capitalised as `Jesus` on purpose — see decision D9. The _package_ is
+scoped as `@noah_dave/jesus-cli`; the _executable_ is `Jesus`. Users who prefer to type
+lowercase can run `npx @noah_dave/jesus-cli random`, which npm resolves from the package
+name without needing a second bin entry.
 
 ### Release preconditions
 
@@ -422,7 +432,7 @@ maintainer should re-verify before cutting a release, not as open work.
 
 | Precondition              | Status | Evidence                                                                                         |
 | ------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| Publishable name          | ✅     | `validate-npm-package-name("jesus-cli")` → `validForNewPackages: true`; `Jesus-cli` → `false`    |
+| Publishable name          | ✅     | `@noah_dave/jesus-cli` is valid; unscoped `jesus-cli` is rejected as too similar to `jest-cli`   |
 | `LICENSE` file            | ✅     | MIT text in `LICENSE`, © 2026 noah_dave; `license: "MIT"` in `package.json`                      |
 | Complete npm metadata     | ✅     | `license`, `repository`, `author`, `keywords`, `homepage`, `bugs`, `engines` all present         |
 | Docs ship in the tarball  | ✅     | `files` includes `src`, `data`, `docs`, `README.md`, `CHANGELOG.md`, `LICENSE`                   |
@@ -465,16 +475,16 @@ permission. You must supply two things.
 2. Click your username (top right) → **Access Tokens** → **Generate New Token**.
 3. Choose **Granular Access Token** and fill it in like this:
 
-   | Field                            | Value                                     | Why                                                                    |
-   | -------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- |
-   | Token name                       | `jesus-cli-ci`                            | only a label                                                           |
-   | Description                      | `Publishes jesus-cli from GitHub Actions` | future-you will thank you                                              |
-   | Allowed IP ranges                | **leave empty**                           | GitHub runners use dynamic IPs; an allowlist breaks the publish        |
-   | Packages and scopes → permission | **Read and write (publish and stage)**    | `stage only` is for `npm stage publish`, which this repo does not use  |
-   | Package selection                | **All packages**                          | the package does not exist yet — a token scoped to it cannot create it |
-   | Organizations → permission       | **No access**                             | personal scope                                                         |
-   | Expiration                       | up to 365 days                            | when it expires, publishing breaks; calendar it or rotate              |
-   | Bypass 2FA (if shown)            | **enabled**                               | otherwise CI publish fails waiting for an OTP                          |
+   | Field                            | Value                                    | Why                                                                    |
+   | -------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+   | Token name                       | `jesus-cli-ci`                           | only a label                                                           |
+   | Description                      | `Publishes @noah_dave/jesus-cli from CI` | future-you will thank you                                              |
+   | Allowed IP ranges                | **leave empty**                          | GitHub runners use dynamic IPs; an allowlist breaks the publish        |
+   | Packages and scopes → permission | **Read and write (publish and stage)**   | `stage only` is for `npm stage publish`, which this repo does not use  |
+   | Package selection                | **All packages**                         | the package does not exist yet — a token scoped to it cannot create it |
+   | Organizations → permission       | **No access**                            | personal scope                                                         |
+   | Expiration                       | up to 365 days                           | when it expires, publishing breaks; calendar it or rotate              |
+   | Bypass 2FA (if shown)            | **enabled**                              | otherwise CI publish fails waiting for an OTP                          |
 
    Before generating, confirm the summary says the token will "Provide **read and write**
    access to all packages and scopes". If it says "no access", the permission dropdown did
@@ -487,10 +497,22 @@ permission. You must supply two things.
 5. In the GitHub repository: **Settings → Secrets and variables → Actions → Secrets tab
    → New repository secret**. Name it exactly `NPM_TOKEN`, paste the token, save.
 
+> **npm now restricts tokens that bypass 2FA.** If `npm publish` returns
+> `403 … Two-factor authentication or granular access token with bypass 2fa enabled is
+required to publish packages`, do the first publish from your machine with a live
+> authenticator code instead:
+>
+> ```bash
+> npm publish --otp=123456   # replace with the current 6-digit code
+> ```
+>
+> A live OTP is not affected by the token restriction. Use Trusted Publishing for CI
+> afterwards.
+
 > **After the first successful publish**, prefer **Trusted Publishing** over a long-lived
-> token: npmjs.com → the `jesus-cli` package → **Settings → Trusted Publisher → GitHub
-> Actions**, repository `DavisNoah02/JESUS_CLI`, workflow `release.yml`. Then delete the
-> `NPM_TOKEN` secret. This needs npm CLI ≥ 11.5.1 (Node 22 bundles 10.x, so add
+> token: npmjs.com → the `@noah_dave/jesus-cli` package → **Settings → Trusted Publisher
+> → GitHub Actions**, repository `DavisNoah02/JESUS_CLI`, workflow `release.yml`. Then
+> delete the `NPM_TOKEN` secret. This needs npm CLI ≥ 11.5.1 (Node 22 bundles 10.x, so add
 > `npm install -g npm@latest` to the job or move to Node 24). The workflow already has
 > `id-token: write`, so it is ready apart from the CLI version.
 
@@ -527,7 +549,7 @@ npm install --global .               # install the local build globally
 Jesus random                         # the exact command from the release notes
 Jesus read "John 3:16"
 Jesus --version
-npm uninstall --global jesus-cli     # clean up
+npm uninstall --global @noah_dave/jesus-cli     # clean up
 ```
 
 If `Jesus random` does not work here, it will not work for a user.
@@ -537,7 +559,7 @@ and it exercises the `files` array:
 
 ```bash
 npm pack --pack-destination /tmp
-npm install --global /tmp/jesus-cli-0.1.0.tgz --prefix /tmp/globaltest
+npm install --global /tmp/noah_dave-jesus-cli-0.1.0.tgz --prefix /tmp/globaltest
 /tmp/globaltest/bin/Jesus read "John 3:16"
 ```
 
@@ -571,8 +593,8 @@ produced a green build that published nothing.
 #### 6. Verify the published package
 
 ```bash
-npm view jesus-cli versions
-npm install --global jesus-cli
+npm view @noah_dave/jesus-cli versions
+npm install --global @noah_dave/jesus-cli
 Jesus random
 ```
 
@@ -582,15 +604,17 @@ failure.
 
 ### Troubleshooting the publish
 
-| Symptom                                              | Cause                                                                                              | Fix                                                                               |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `publish-npm` job absent from the run                | `PUBLISH_TO_NPM` was created as a **Secret**, or not set when the workflow started                 | Move it to the **Variables** tab; re-run via **Actions → Release → Run workflow** |
-| `npm error code E401` / `need auth`                  | The secret name is wrong, or the token is wrong/expired                                            | Secret must be named exactly `NPM_TOKEN`; regenerate and update it                |
-| `npm error code E403`                                | The account cannot publish this name, or 2FA wants an OTP and the token is not an automation token | Confirm the name is free and the token is an Automation token                     |
-| `npm error code EPUBLISHCONFLICT`                    | That version is already on npm                                                                     | Harmless — the job stays green and the publish is skipped                         |
-| Provenance error                                     | `repository` in `package.json` does not match the repo, or `id-token: write` is missing            | Both are already correct in `release.yml`; check `package.json`                   |
-| GitHub Release exists, no npm package                | The publish job was skipped                                                                        | The `PUBLISH_TO_NPM` variable problem above                                       |
-| `npm view jesus-cli` 404s after a successful publish | Registry propagation delay                                                                         | Wait a few minutes and retry                                                      |
+| Symptom                                                                                         | Cause                                                                                   | Fix                                                                                     |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `publish-npm` job absent from the run                                                           | `PUBLISH_TO_NPM` was created as a **Secret**, or not set when the workflow started      | Move it to the **Variables** tab; re-run via **Actions → Release → Run workflow**       |
+| `npm error code E401` / `ENEEDAUTH`                                                             | The secret is missing, empty, or misnamed                                               | Secret must be named exactly `NPM_TOKEN`, under **Secrets**; re-paste without a newline |
+| `E403 … Two-factor authentication or granular access token with bypass 2fa enabled is required` | npm requires 2FA and the token may not bypass it (npm is retiring bypass tokens)        | Publish locally with `npm publish --otp=<live code>`, or use Trusted Publishing         |
+| `E403 … Package name too similar to existing package 'jest-cli'`                                | npm's typosquat protection blocks the unscoped name `jesus-cli`                         | Use the scoped name `@noah_dave/jesus-cli` with `publishConfig.access: "public"`        |
+| `npm warn publish "bin[Jesus]" … was invalid and removed`                                       | A `./`-prefixed bin path is dropped by npm 12+                                          | Use `"bin": { "Jesus": "src/cli.js" }` (no `./`)                                        |
+| `npm error code EPUBLISHCONFLICT`                                                               | That version is already on npm                                                          | Harmless — the job stays green and the publish is skipped                               |
+| Provenance error                                                                                | `repository` in `package.json` does not match the repo, or `id-token: write` is missing | Both are already correct in `release.yml`; check `package.json`                         |
+| GitHub Release exists, no npm package                                                           | The publish job was skipped                                                             | The `PUBLISH_TO_NPM` variable problem above                                             |
+| `npm view @noah_dave/jesus-cli` 404s after a successful publish                                 | Registry propagation delay                                                              | Wait a few minutes and retry                                                            |
 
 ### If you publish a broken version
 
@@ -630,9 +654,9 @@ version number and puts a broken artifact in the registry's history. That work i
 These were the blockers before M11, kept here because they explain the ordering:
 
 1. **The package could not be published.** The mixed-case name was rejected by npm, so
-   `npm install --global jesus-cli` would have resolved to some _other_ package, or to
-   nothing. The `|| echo` in the workflow would also have turned the resulting failure
-   into a **green** build.
+   `npm install --global @noah_dave/jesus-cli` would have resolved to some _other_
+   package, or to nothing. The `|| echo` in the workflow would also have turned the
+   resulting failure into a **green** build.
 2. **The metadata was missing.** No `LICENSE`, no `license`/`repository`/`author` fields,
    and `docs/` was not in `files`.
 3. **`main` was behind.** It did not yet contain M7–M10. A tag then would have published a
@@ -642,7 +666,7 @@ All three are resolved: see "Release preconditions" for the current evidence.
 
 ### The conditions for `v0.1.0` — all met
 
-- [x] M11 complete: package renamed to `jesus-cli`, LICENSE added, npm metadata added, `docs/` packaged. The `bin` map stays `{ "Jesus": "./src/cli.js" }` (decision D9).
+- [x] M11 complete: package named `@noah_dave/jesus-cli`, LICENSE added, npm metadata added, `docs/` packaged. The `bin` map stays `{ "Jesus": "src/cli.js" }` (decision D9).
 - [x] The release workflow's publish step no longer swallows real failures.
 - [x] `main` contains M7–M10 (merged via PRs #3 and #4).
 - [x] `npm install --global . && Jesus random` verified locally, and the packed tarball verified in an isolated prefix.
@@ -708,30 +732,31 @@ All of them are tracked and included in the package's `files` array.
 
 Decisions that shape the roadmap. Superseded decisions are struck through, not deleted.
 
-| ID  | Decision                                                                                                                                              | Status                                       | Rationale                                                                                                                                                                                                                                                                                                                                                     |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | `today` under a non-KJV translation resolves the KJV reference, then looks it up in the target translation, falling back to KJV with a stderr warning | **Accepted — implemented in M7**             | Keeps `today` deterministic _and_ consistent with the user's chosen translation. The fallback is reported, never silent.                                                                                                                                                                                                                                      |
-| D2  | Supported translation codes are a bundled allowlist, enforced at the CLI boundary with a clear error                                                  | **Accepted — implemented in M7**             | Bolls has no translation-list endpoint and returns HTTP 200 with `[]` for an unknown code, which produces a misleading error. 17 codes verified live. A stale list is fixed by a patch release; the alternative (a silent wrong error) is worse.                                                                                                              |
-| D3  | The cache moves under the app data directory                                                                                                          | **Accepted — implemented in M7**             | State is at `<dataDir>/jesus-cli/state.json` but the cache was at `<dataDir>/translations/`. Now `<dataDir>/jesus-cli/translations/`, with a one-time automatic migration of the old location. Done before the CLI started writing to users' home directories.                                                                                                |
-| D4  | `--translation` is ephemeral; only `config set` persists                                                                                              | **Accepted — implemented in M7**             | A flag must not mutate persistent state as a side effect. Verified by a test that asserts a flag never creates a state file.                                                                                                                                                                                                                                  |
-| D5  | `--json` lands in M8, not M7                                                                                                                          | Accepted                                     | Keeps M7 reviewable. The argument parser from M7.1 makes adding it later cheap.                                                                                                                                                                                                                                                                               |
-| D6  | The TUI is additive, never a replacement for the plain-text CLI                                                                                       | Accepted                                     | The scriptable surface is the product's identity.                                                                                                                                                                                                                                                                                                             |
-| D7  | `v0.1.0` is cut immediately after M11, and `v1.0.0` waits for M12                                                                                     | Accepted                                     | Tagging before the package is installable burns a version number and can produce a release that looks green but installs nothing.                                                                                                                                                                                                                             |
-| D8  | The plain-text output format is a public API and changes only in a major release                                                                      | Accepted                                     | Users pipe it into `grep` and `awk`. Stability is worth more than cosmetic tweaks.                                                                                                                                                                                                                                                                            |
-| D9  | The executable stays `Jesus`, capitalised. No lowercase `jesus` alias                                                                                 | **Accepted — a deliberate product decision** | Many believers are called to capitalise the name of Jesus, and the command is a devotional tool, not just a developer utility. A lowercase alias would make the invocation ambiguous and weaken the intent. The npm _package_ name is still lowercase `jesus-cli` because npm requires it, and `npx jesus-cli …` covers anyone who prefers to type lowercase. |
+| ID  | Decision                                                                                                                                              | Status                                       | Rationale                                                                                                                                                                                                                                                                                                                                                  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | `today` under a non-KJV translation resolves the KJV reference, then looks it up in the target translation, falling back to KJV with a stderr warning | **Accepted — implemented in M7**             | Keeps `today` deterministic _and_ consistent with the user's chosen translation. The fallback is reported, never silent.                                                                                                                                                                                                                                   |
+| D2  | Supported translation codes are a bundled allowlist, enforced at the CLI boundary with a clear error                                                  | **Accepted — implemented in M7**             | Bolls has no translation-list endpoint and returns HTTP 200 with `[]` for an unknown code, which produces a misleading error. 17 codes verified live. A stale list is fixed by a patch release; the alternative (a silent wrong error) is worse.                                                                                                           |
+| D3  | The cache moves under the app data directory                                                                                                          | **Accepted — implemented in M7**             | State is at `<dataDir>/jesus-cli/state.json` but the cache was at `<dataDir>/translations/`. Now `<dataDir>/jesus-cli/translations/`, with a one-time automatic migration of the old location. Done before the CLI started writing to users' home directories.                                                                                             |
+| D4  | `--translation` is ephemeral; only `config set` persists                                                                                              | **Accepted — implemented in M7**             | A flag must not mutate persistent state as a side effect. Verified by a test that asserts a flag never creates a state file.                                                                                                                                                                                                                               |
+| D5  | `--json` lands in M8, not M7                                                                                                                          | Accepted                                     | Keeps M7 reviewable. The argument parser from M7.1 makes adding it later cheap.                                                                                                                                                                                                                                                                            |
+| D6  | The TUI is additive, never a replacement for the plain-text CLI                                                                                       | Accepted                                     | The scriptable surface is the product's identity.                                                                                                                                                                                                                                                                                                          |
+| D7  | `v0.1.0` is cut immediately after M11, and `v1.0.0` waits for M12                                                                                     | Accepted                                     | Tagging before the package is installable burns a version number and can produce a release that looks green but installs nothing.                                                                                                                                                                                                                          |
+| D8  | The plain-text output format is a public API and changes only in a major release                                                                      | Accepted                                     | Users pipe it into `grep` and `awk`. Stability is worth more than cosmetic tweaks.                                                                                                                                                                                                                                                                         |
+| D9  | The executable stays `Jesus`, capitalised. No lowercase `jesus` alias                                                                                 | **Accepted — a deliberate product decision** | Many believers are called to capitalise the name of Jesus, and the command is a devotional tool, not just a developer utility. A lowercase alias would make the invocation ambiguous and weaken the intent. The npm _package_ is scoped as `@noah_dave/jesus-cli` (see D10), and `npx @noah_dave/jesus-cli …` covers anyone who prefers to type lowercase. |
+| D10 | The npm package is scoped: `@noah_dave/jesus-cli`                                                                                                     | Accepted                                     | npm rejects the unscoped name `jesus-cli` at publish as "too similar to existing package jest-cli" (typosquat protection), despite the name being unclaimed. Scoping keeps the intended name and the `Jesus` executable; the cost is a longer install command.                                                                                             |
 
 ### D9 in detail — the executable name
 
 Two names, two different rules:
 
-| Thing       | Name        | Why                                                                                                                           |
-| ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| npm package | `jesus-cli` | npm rejects new packages whose name contains capital letters. Not a choice.                                                   |
-| Executable  | `Jesus`     | A deliberate choice (decision D9). The capitalisation is intentional and should not be "fixed" by a well-meaning contributor. |
+| Thing       | Name                   | Why                                                                                                                           |
+| ----------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| npm package | `@noah_dave/jesus-cli` | npm rejects `Jesus-cli` (capitals) and the unscoped `jesus-cli` (too similar to `jest-cli`). The scope preserves the name.    |
+| Executable  | `Jesus`                | A deliberate choice (decision D9). The capitalisation is intentional and should not be "fixed" by a well-meaning contributor. |
 
 Practical consequence: a user who types lowercase gets "command not found". The fix is
-`npx jesus-cli read "John 3:16"`, which npm resolves from the package name — no second
-bin entry required, and the capitalised `Jesus` stays the one and only command.
+`npx @noah_dave/jesus-cli read "John 3:16"`, which npm resolves from the package name — no
+second bin entry required, and the capitalised `Jesus` stays the one and only command.
 
 ### D1 in detail — `today` under a non-KJV translation
 
