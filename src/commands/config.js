@@ -64,9 +64,7 @@ export async function configCommand(context) {
 
   if (action === "get") {
     if (!key) {
-      throw new UsageError(
-        `Usage: jesuschrist config get <key>  (keys: ${SETTINGS.join(", ")})`,
-      );
+      throw new UsageError(`Usage: jesuschrist config get <key>  (keys: ${SETTINGS.join(", ")})`);
     }
     if (!SETTINGS.includes(key)) {
       throw new UsageError(`Unknown setting: ${key}. Valid settings: ${SETTINGS.join(", ")}`);
