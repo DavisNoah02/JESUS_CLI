@@ -133,14 +133,14 @@ into `grep`, they get clean text. Run these in a real terminal _and_ through a p
 
 ### 3.4 JSON and pagination
 
-| Command | Passes if |
-| ------- | --------- |
-| `node src/cli.js read "John 3:16" --json` | Valid JSON; `schemaVersion` is `1`; verse text is in `data.verses[0].text` |
+| Command                                                     | Passes if                                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `node src/cli.js read "John 3:16" --json`                   | Valid JSON; `schemaVersion` is `1`; verse text is in `data.verses[0].text`       |
 | `node src/cli.js search faith --limit 5 --offset 10 --json` | Valid JSON; `data.limit` is 5, `data.offset` is 10, and `data.total` is reported |
-| `node src/cli.js books --json` | Valid JSON; `data.books` has 66 entries with aliases and chapter counts |
-| `node src/cli.js random --json` | Valid JSON; one verse is returned |
-| `node src/cli.js today --json` | Valid JSON; one verse is returned |
-| `node src/cli.js config list --json` | Valid JSON; `data.settings` contains translation and theme |
+| `node src/cli.js books --json`                              | Valid JSON; `data.books` has 66 entries with aliases and chapter counts          |
+| `node src/cli.js random --json`                             | Valid JSON; one verse is returned                                                |
+| `node src/cli.js today --json`                              | Valid JSON; one verse is returned                                                |
+| `node src/cli.js config list --json`                        | Valid JSON; `data.settings` contains translation and theme                       |
 
 The complete contract and the meaning of search `source`/`total` are documented in
 [`JSON_SCHEMA.md`](JSON_SCHEMA.md). Plain-text commands must remain unchanged.
