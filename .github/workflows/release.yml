@@ -61,17 +61,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+      - name: Show npm version
+        run: npm --version # must be >= 11.5.1
       - name: Publish
-        # Only "this version already exists" is tolerated. Every other failure —
-        # an expired or missing token, a 4xx from the registry, a provenance
-        # failure — must fail the job loudly rather than look like a success.
         run: |
           set -uo pipefail
-          if output=$(npm publish --provenance 2>&1); then
+          if output=$(npm publish --provenance --access public 2>&1); then
             echo "$output"
-          elif echo "$output" | grep -q "EPUBLISHCONFLICT"; then
+          elif echo "$output" | grep -qE "EPUBLISHCONFLICT|cannot publish over"; then
             echo "::notice::Version already published, skipping"
           else
             echo "$output"
