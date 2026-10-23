@@ -77,19 +77,31 @@ async function getVerseIndex() {
   return verseIndex;
 }
 
-export async function search(query, limit = 50) {
+export async function searchPage(query, limit = 50, offset = 0) {
   const index = await getVerseIndex();
   const needle = String(query).toLowerCase();
   const matches = [];
+  let total = 0;
 
   for (const item of index) {
     if (item.lower.includes(needle)) {
-      matches.push({ book: item.book, chapter: item.chapter, verse: item.verse, text: item.text });
-      if (matches.length >= limit) break;
+      if (total >= offset && matches.length < limit) {
+        matches.push({
+          book: item.book,
+          chapter: item.chapter,
+          verse: item.verse,
+          text: item.text,
+        });
+      }
+      total += 1;
     }
   }
 
-  return matches;
+  return { results: matches, total };
+}
+
+export async function search(query, limit = 50) {
+  return (await searchPage(query, limit)).results;
 }
 
 async function getBookLayout() {

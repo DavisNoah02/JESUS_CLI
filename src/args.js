@@ -4,6 +4,7 @@ const STRING_OPTIONS = new Map([
   ["translation", "translation"],
   ["theme", "theme"],
   ["limit", "limit"],
+  ["offset", "offset"],
 ]);
 
 const BOOLEAN_OPTIONS = new Map([
@@ -11,6 +12,7 @@ const BOOLEAN_OPTIONS = new Map([
   ["debug", "debug"],
   ["help", "help"],
   ["version", "version"],
+  ["json", "json"],
 ]);
 
 const SHORT_OPTIONS = new Map([

@@ -1,7 +1,7 @@
 import { getVerses } from "../api/resolver.js";
 import { parseReference } from "../data/reference.js";
 import { UsageError } from "../errors.js";
-import { printVerse } from "./output.js";
+import { printJson, printVerse } from "./output.js";
 
 export async function readCommand(context) {
   const referenceValue = context.positionals.join(" ").trim();
@@ -22,7 +22,26 @@ export async function readCommand(context) {
     context.options,
   );
 
-  for (const verse of verses) {
-    printVerse({ book: reference.book, chapter: reference.chapter, ...verse }, context);
+  const results = verses.map((verse) => ({
+    book: reference.book,
+    chapter: reference.chapter,
+    ...verse,
+  }));
+  if (context.flags.json) {
+    printJson("read", {
+      reference: {
+        book: reference.book,
+        chapter: reference.chapter,
+        verseStart: reference.verseStart,
+        verseEnd: reference.verseEnd,
+      },
+      translation: context.translation,
+      verses: results,
+    });
+    return;
+  }
+
+  for (const verse of results) {
+    printVerse(verse, context);
   }
 }

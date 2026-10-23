@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { UsageError } from "../src/errors.js";
-import { resolveLimit, resolveTheme, resolveTranslation } from "../src/context.js";
+import { resolveLimit, resolveOffset, resolveTheme, resolveTranslation } from "../src/context.js";
 
 function collector() {
   const messages = [];
@@ -64,6 +64,20 @@ test("rejects a non positive or non integer limit", () => {
   assert.throws(() => resolveLimit("-3"), { name: "UsageError", message: /positive integer/ });
   assert.throws(() => resolveLimit("abc"), { name: "UsageError", message: /positive integer/ });
   assert.throws(() => resolveLimit("1.5"), { name: "UsageError", message: /positive integer/ });
+});
+
+test("resolves and validates a non-negative search offset", () => {
+  assert.equal(resolveOffset(undefined), 0);
+  assert.equal(resolveOffset("0"), 0);
+  assert.equal(resolveOffset("10"), 10);
+  assert.throws(() => resolveOffset("-1"), {
+    name: "UsageError",
+    message: /non-negative integer/,
+  });
+  assert.throws(() => resolveOffset("1.5"), {
+    name: "UsageError",
+    message: /non-negative integer/,
+  });
 });
 
 test("every usage failure is a UsageError", () => {

@@ -3,6 +3,7 @@ import { searchCommand } from "./search.js";
 import { randomCommand } from "./random.js";
 import { todayCommand } from "./today.js";
 import { configCommand } from "./config.js";
+import { booksCommand } from "./books.js";
 
 export const COMMANDS = Object.freeze({
   read: readCommand,
@@ -10,6 +11,7 @@ export const COMMANDS = Object.freeze({
   random: randomCommand,
   today: todayCommand,
   config: configCommand,
+  books: booksCommand,
 });
 
-export { readCommand, searchCommand, randomCommand, todayCommand, configCommand };
+export { readCommand, searchCommand, randomCommand, todayCommand, configCommand, booksCommand };

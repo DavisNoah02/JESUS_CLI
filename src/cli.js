@@ -2,7 +2,7 @@
 
 import { parseArgs } from "./args.js";
 import { COMMANDS } from "./commands/index.js";
-import { resolveLimit, resolveTheme, resolveTranslation } from "./context.js";
+import { resolveLimit, resolveOffset, resolveTheme, resolveTranslation } from "./context.js";
 import { UsageError } from "./errors.js";
 import { printError, printResult, printWarning } from "./logger.js";
 import { load as loadState, statePath } from "./store/state.js";
@@ -13,9 +13,10 @@ const USAGE = `Usage: jesuschrist <command> [<reference>]
 
 Commands:
   read <reference>   Read verses (e.g. "John 3:16", "Psalm 23:1-6", "John 3")
-  search <query>     Search the Bible, up to 50 results
+  search <query>     Search the Bible with pagination
   random             Show a random verse
   today              Show today's verse (stable for the current day)
+  books              List all books with aliases and chapter counts
   config <action>    Read or write settings (list | get | set)
   --version          Print the version
   --help             Show this help
@@ -24,15 +25,18 @@ Options:
   -t, --translation <CODE>   Translation to use (e.g. KJV, WEB, NIV)
       --theme <NAME>         Theme to use (Slate, Midnight)
   -n, --limit <N>            Maximum number of search results
+      --offset <N>           Offset for paginated results
+      --json                 Output machine-readable JSON
       --no-color             Disable colored output
       --debug                Show stack traces for errors
-  --                         Treat everything after this as plain arguments
+      --                     Treat everything after this as plain arguments
 
 Examples:
   jesuschrist read "John 3:16"
   jesuschrist --translation WEB read "John 3:16"
   jesuschrist config set translation WEB
-  jesuschrist search faith --limit 10`;
+  jesuschrist search faith --limit 10
+  jesuschrist books --json`;
 
 const KNOWN_ERROR_NAMES = new Set([
   "ReferenceParseError",
@@ -56,11 +60,13 @@ async function buildContext(parsed) {
 
   const translation = resolveTranslation(parsed.flags.translation, state.translation, warn);
   const limit = resolveLimit(parsed.flags.limit);
+  const offset = resolveOffset(parsed.flags.offset);
 
   const options = { onWarn: warn };
   if (limit !== undefined) {
     options.limit = limit;
   }
+  options.offset = offset;
 
   return {
     state,
@@ -70,6 +76,7 @@ async function buildContext(parsed) {
     translation,
     theme,
     limit,
+    offset,
     colorEnabled: shouldUseColor() && !parsed.flags["no-color"],
     options,
   };
@@ -79,11 +86,39 @@ async function main() {
   const parsed = parseArgs(process.argv.slice(2));
 
   if (parsed.flags.version) {
+    if (parsed.flags.json) {
+      printResult(
+        JSON.stringify(
+          {
+            schemaVersion: 1,
+            type: "version",
+            data: { version: version() },
+          },
+          null,
+          2,
+        ),
+      );
+      return;
+    }
     printResult(`jesuschrist ${version()}`);
     return;
   }
 
   if (parsed.flags.help) {
+    if (parsed.flags.json) {
+      printResult(
+        JSON.stringify(
+          {
+            schemaVersion: 1,
+            type: "help",
+            data: { usage: USAGE.trim() },
+          },
+          null,
+          2,
+        ),
+      );
+      return;
+    }
     printResult(USAGE);
     return;
   }

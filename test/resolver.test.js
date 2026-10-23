@@ -12,6 +12,7 @@ import {
   getVerses,
   isKjv,
   search,
+  searchPage,
 } from "../src/api/resolver.js";
 import { loadChapter, saveChapter, translationDir } from "../src/store/cache.js";
 import { errorName } from "../src/errors.js";
@@ -142,6 +143,38 @@ test("search honours an explicit limit", async () => {
   const limited = await search("the", "KJV", { limit: 3 });
   assert.equal(limited.length, 3);
   assert.match(limited[0].text, /^In the beginning/);
+});
+
+test("KJV search pages in canonical order and reports the full match count", async () => {
+  const firstPage = await searchPage("the", "KJV", { limit: 3, offset: 0 });
+  const secondPage = await searchPage("the", "KJV", { limit: 3, offset: 3 });
+
+  assert.equal(firstPage.results.length, 3);
+  assert.equal(firstPage.total, secondPage.total);
+  assert.equal(firstPage.total > 50, true);
+  assert.equal(firstPage.offset, 0);
+  assert.equal(secondPage.offset, 3);
+  assert.notDeepEqual(firstPage.results[0], secondPage.results[0]);
+});
+
+test("cached translation search reports that totals cover only cached content", async () => {
+  const dir = await newDir();
+  await saveChapter(
+    "WEB",
+    43,
+    3,
+    [
+      { verse: 16, text: "Love, love, love" },
+      { verse: 17, text: "Love again" },
+    ],
+    { dataDir: dir },
+  );
+
+  const page = await searchPage("love", "WEB", { dataDir: dir, limit: 1, offset: 1 });
+  assert.equal(page.results.length, 1);
+  assert.equal(page.results[0].verse, 17);
+  assert.equal(page.total, 2);
+  assert.equal(page.source, "cache");
 });
 
 test("search defaults to 50 results", async () => {

@@ -298,6 +298,75 @@ test("search honours --limit", () => {
   assert.equal(result.stdout.trim().split("\n").length, 2);
 });
 
+test("search supports --offset and reports totals in JSON", () => {
+  const first = runCli("search", "the", "--limit", "2", "--offset", "0", "--json");
+  const second = runCli("search", "the", "--limit", "2", "--offset", "2", "--json");
+  const firstData = JSON.parse(first.stdout);
+  const secondData = JSON.parse(second.stdout);
+
+  assert.equal(first.status, 0);
+  assert.equal(firstData.schemaVersion, 1);
+  assert.equal(firstData.type, "search");
+  assert.equal(firstData.data.total > 50, true);
+  assert.equal(firstData.data.verses.length, 2);
+  assert.equal(secondData.data.total, firstData.data.total);
+  assert.equal(secondData.data.offset, 2);
+  assert.notDeepEqual(secondData.data.verses[0], firstData.data.verses[0]);
+});
+
+test("read --json returns structured verse data", () => {
+  const result = runCli("read", "John 3:16", "--json");
+  const envelope = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(envelope.schemaVersion, 1);
+  assert.equal(envelope.type, "read");
+  assert.deepEqual(envelope.data.reference, {
+    book: "John",
+    chapter: 3,
+    verseStart: 16,
+    verseEnd: 16,
+  });
+  assert.equal(envelope.data.translation, "KJV");
+  assert.equal(envelope.data.verses[0].verse, 16);
+  assert.match(envelope.data.verses[0].text, /For God so loved the world/);
+});
+
+test("books --json lists all canonical books and aliases", () => {
+  const result = runCli("books", "--json");
+  const envelope = JSON.parse(result.stdout);
+
+  assert.equal(envelope.schemaVersion, 1);
+  assert.equal(envelope.type, "books");
+  assert.equal(envelope.data.books.length, 66);
+  assert.equal(envelope.data.books[0].name, "Genesis");
+  assert.deepEqual(envelope.data.books[0].aliases, ["gen"]);
+  assert.equal(envelope.data.books[0].chapters, 50);
+});
+
+test("random, today, and config list support JSON output", () => {
+  for (const [command, args] of [
+    ["random", ["random"]],
+    ["today", ["today"]],
+  ]) {
+    const result = runCli(...args, "--json");
+    const envelope = JSON.parse(result.stdout);
+    assert.equal(envelope.schemaVersion, 1);
+    assert.equal(envelope.type, command);
+    assert.equal(envelope.data.verses.length, 1);
+  }
+
+  const config = JSON.parse(runCli("config", "list", "--json").stdout);
+  assert.equal(config.type, "config");
+  assert.deepEqual(config.data.settings, { translation: "KJV", theme: "Slate" });
+});
+
+test("search rejects a negative --offset", () => {
+  const result = runCli("search", "faith", "--offset", "-1");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /--offset must be a non-negative integer/);
+});
+
 test("search rejects a non positive --limit", () => {
   const result = runCli("search", "faith", "--limit", "0");
   assert.equal(result.status, 1);

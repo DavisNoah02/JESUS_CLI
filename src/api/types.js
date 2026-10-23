@@ -40,6 +40,7 @@
 /**
  * @typedef {object} ResolverOptions
  * @property {number} [limit] maximum number of results for a search
+ * @property {number} [offset] number of matching results to skip
  * @property {(message: string) => void} [onWarn] called when the resolver
  *   substitutes a fallback, so the CLI can report it on stderr
  */
@@ -60,6 +61,7 @@
  * @property {string} translation resolved translation code
  * @property {string} theme resolved theme name
  * @property {number|undefined} limit maximum number of search results
+ * @property {number} offset number of matching search results to skip
  * @property {boolean} colorEnabled
  * @property {ResolverOptions} options
  */

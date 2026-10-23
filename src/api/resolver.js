@@ -3,7 +3,7 @@ import {
   getChapter as getKjvChapter,
   getVerses as getKjvVerses,
   randomVerse as getKjvRandomVerse,
-  search as searchKjv,
+  searchPage as searchKjvPage,
   verseOfTheDay as getKjvVerseOfTheDay,
 } from "../data/kjv.js";
 import {
@@ -146,23 +146,51 @@ export function getVerseRange(
 }
 
 export async function search(query, translation = "KJV", options = {}) {
+  return (await searchPage(query, translation, options)).results;
+}
+
+export async function searchPage(query, translation = "KJV", options = {}) {
   const needle = String(query ?? "").trim();
-  if (!needle) return [];
+  if (!needle) {
+    return {
+      results: [],
+      total: 0,
+      limit:
+        Number.isInteger(options.limit) && options.limit > 0 ? options.limit : MAX_SEARCH_RESULTS,
+      offset: Number.isInteger(options.offset) && options.offset >= 0 ? options.offset : 0,
+      source: isKjv(translation) ? "bundled" : "network",
+    };
+  }
 
   const code = normalizeTranslation(translation);
   const limit =
     Number.isInteger(options.limit) && options.limit > 0 ? options.limit : MAX_SEARCH_RESULTS;
+  const offset = Number.isInteger(options.offset) && options.offset >= 0 ? options.offset : 0;
 
   if (isKjv(code)) {
-    return searchKjv(needle, limit);
+    const page = await searchKjvPage(needle, limit, offset);
+    return { ...page, limit, offset, source: "bundled" };
   }
 
   if (await hasCachedData(code, options)) {
-    return (await searchCache(code, needle, options)).slice(0, limit);
+    const allResults = await searchCache(code, needle, options);
+    return {
+      results: allResults.slice(offset, offset + limit),
+      total: allResults.length,
+      limit,
+      offset,
+      source: (await isFullyCached(code, options)) ? "complete-cache" : "cache",
+    };
   }
 
-  const results = await bolls.search(code, needle);
-  return results.slice(0, limit).map(mapBollsSearchResult);
+  const allResults = (await bolls.search(code, needle)).map(mapBollsSearchResult);
+  return {
+    results: allResults.slice(offset, offset + limit),
+    total: allResults.length,
+    limit,
+    offset,
+    source: "network",
+  };
 }
 
 export async function getRandomVerse(translation = "KJV", options = {}) {

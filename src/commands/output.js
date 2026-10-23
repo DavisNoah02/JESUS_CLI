@@ -1,6 +1,10 @@
 import { paint } from "../theme.js";
 import { printResult } from "../logger.js";
 
+export function printJson(type, data) {
+  printResult(JSON.stringify({ schemaVersion: 1, type, data }, null, 2));
+}
+
 /**
  * Render one verse as a single line:
  *

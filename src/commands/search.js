@@ -1,8 +1,8 @@
-import { search } from "../api/resolver.js";
+import { searchPage } from "../api/resolver.js";
 import { UsageError } from "../errors.js";
 import { paint } from "../theme.js";
 import { printResult } from "../logger.js";
-import { printVerse } from "./output.js";
+import { printJson, printVerse } from "./output.js";
 
 export async function searchCommand(context) {
   const query = context.positionals.join(" ").trim();
@@ -13,9 +13,22 @@ export async function searchCommand(context) {
     );
   }
 
-  const results = await search(query, context.translation, context.options);
+  const page = await searchPage(query, context.translation, context.options);
 
-  if (results.length === 0) {
+  if (context.flags.json) {
+    printJson("search", {
+      query,
+      translation: context.translation,
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
+      source: page.source,
+      verses: page.results,
+    });
+    return;
+  }
+
+  if (page.results.length === 0) {
     printResult(
       paint(`No results for "${query}"`, "muted", {
         theme: context.theme,
@@ -25,7 +38,7 @@ export async function searchCommand(context) {
     return;
   }
 
-  for (const verse of results) {
+  for (const verse of page.results) {
     printVerse(verse, context);
   }
 }

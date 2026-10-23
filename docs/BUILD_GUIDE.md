@@ -22,40 +22,39 @@ Verified by running the working tree. Last checked: Node v24.18.0 / npm 12.0.1.
 
 ### Working today (verified by execution)
 
-| Capability       | Command                          | Notes                        |
-| ---------------- | -------------------------------- | ---------------------------- |
-| Single verse     | `Jesus read "John 3:16"`         | Offline, from bundled KJV    |
-| Verse range      | `Jesus read "Psalm 23:1-6"`      | Offline                      |
-| Whole chapter    | `Jesus read "John 3"`            | Offline                      |
-| Text search      | `Jesus search "faith"`           | KJV only, capped at 50 hits  |
-| Random verse     | `Jesus random`                   | Offline                      |
-| Verse of the day | `Jesus today`                    | Offline, stable per UTC date |
-| Version          | `Jesus --version` / `-V`         | Reads `package.json`         |
-| Help             | `Jesus --help` / `-h`            |                              |
-| Aliases          | `Jn 3:16`, `1 Cor 13`, `Ps 23:1` | 66 canonical books           |
-| Error handling   | bad reference / bad command      | stderr + exit code 1         |
+| Capability       | Command                              | Notes                                            |
+| ---------------- | ------------------------------------ | ------------------------------------------------ |
+| Single verse     | `jesuschrist read "John 3:16"`       | Offline, from bundled KJV                        |
+| Verse range      | `jesuschrist read "Psalm 23:1-6"`    | Offline                                           |
+| Whole chapter    | `jesuschrist read "John 3"`          | Offline                                           |
+| Text search      | `jesuschrist search "faith"`         | Translation-aware, default page size 50           |
+| Search page      | `jesuschrist search faith -n 5 --offset 10` | Total reported in JSON output               |
+| Book catalog     | `jesuschrist books --json`            | 66 books, aliases, chapter counts                 |
+| Random verse     | `jesuschrist random`                  | Offline for KJV                                   |
+| Verse of the day | `jesuschrist today`                   | Stable per local calendar date                   |
+| JSON output      | `jesuschrist read "John 3:16" --json` | Versioned schema in `docs/JSON_SCHEMA.md`         |
+| Configuration    | `jesuschrist config list`             | Translation and theme persist locally             |
+| Error handling   | bad reference / bad command           | stderr + exit code 1; unexpected errors exit 70  |
 
-### Implemented but **not reachable from the CLI** (see §10)
+### Implemented and reachable
 
-- Bolls API client (`src/api/bolls.js`) — network-backed translations.
-- Resolver facade (`src/api/resolver.js`) — KJV/network/cache routing.
-- On-disk translation cache (`src/store/cache.js`).
-- State persistence (`src/store/state.js`) and the theme layer (`src/theme.js`).
-
-These layers are implemented and unit-tested, but `src/cli.js` calls `src/data/kjv.js` directly, so a user running `Jesus` today can never trigger them. This is the single largest gap in the project.
+- Bolls API client (`src/api/bolls.js`) for supported network translations.
+- Resolver facade (`src/api/resolver.js`) routes KJV, network, and cached content.
+- On-disk translation cache (`src/store/cache.js`), including offline cached reads.
+- State persistence (`src/store/state.js`), configuration commands, and theme layer.
+- JSON output, books catalog, and search pagination (M8).
 
 ### Not yet implemented
 
-- Interactive terminal UI (TUI).
-- Translation picker / install management.
+- Interactive terminal UI (planned for M12 using Ink).
+- Translation picker / install management in the TUI.
 - Full-translation background downloader.
-- Machine-readable (`--json`) output.
-- Published npm package.
+- M9 parser improvements: compact aliases, dot separators, cross-chapter ranges, and suggestions.
 
 ### Test suite status
 
 ```
-npm test  →  65 tests, 65 pass, 0 fail
+npm run check  → lint, formatting, typecheck, and 138 tests pass
 ```
 
 Runtime is ~5–9s, dominated by the live network tests against `bolls.life`. Network tests hit `bolls.life` live and self-skip via `t.skip("bolls.life unreachable")` when a `NetworkError` is raised. A green run with skipped network tests is still a valid green run.

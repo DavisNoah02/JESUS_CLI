@@ -73,7 +73,9 @@ export JESUS_CLI_DATA_DIR=$(mktemp -d)
 node src/cli.js read "John 3:16"          # a verse
 node src/cli.js read "Psalm 23:1-3"       # a range
 node src/cli.js read "Genesis 1"          # a whole chapter
-node src/cli.js search faith --limit 3    # search, capped
+node src/cli.js search faith --limit 3 --offset 3 --json # paginated JSON search
+node src/cli.js books --json              # 66-book catalog
+node src/cli.js read "John 3:16" --json   # structured verse
 node src/cli.js random                    # a random verse
 node src/cli.js today                     # today's verse
 node src/cli.js config list               # current settings
@@ -81,7 +83,7 @@ node src/cli.js --version
 node src/cli.js --help
 ```
 
-All nine must succeed, print to stdout, and exit 0.
+All listed commands must succeed, print to stdout, and exit 0.
 
 **What it proves:** the KJV path, the resolver, the argument parser, the theme layer, and the
 state reader all work with no network and no pre-existing state.
@@ -129,7 +131,21 @@ into `grep`, they get clean text. Run these in a real terminal _and_ through a p
 | 14  | `node src/cli.js search faith --limit=3`  | Exactly 3 lines — the `=` form works           |
 | 15  | `node src/cli.js search "faith and hope"` | No error; quotes are respected as one query    |
 
-### 3.4 `today`
+### 3.4 JSON and pagination
+
+| Command | Passes if |
+| ------- | --------- |
+| `node src/cli.js read "John 3:16" --json` | Valid JSON; `schemaVersion` is `1`; verse text is in `data.verses[0].text` |
+| `node src/cli.js search faith --limit 5 --offset 10 --json` | Valid JSON; `data.limit` is 5, `data.offset` is 10, and `data.total` is reported |
+| `node src/cli.js books --json` | Valid JSON; `data.books` has 66 entries with aliases and chapter counts |
+| `node src/cli.js random --json` | Valid JSON; one verse is returned |
+| `node src/cli.js today --json` | Valid JSON; one verse is returned |
+| `node src/cli.js config list --json` | Valid JSON; `data.settings` contains translation and theme |
+
+The complete contract and the meaning of search `source`/`total` are documented in
+[`JSON_SCHEMA.md`](JSON_SCHEMA.md). Plain-text commands must remain unchanged.
+
+### 3.5 `today`
 
 | #   | Command                            | Passes if                                      |
 | --- | ---------------------------------- | ---------------------------------------------- |
@@ -147,7 +163,7 @@ faketime '2026-09-24 12:00' node src/cli.js today   # tomorrow's verse, if faket
 The two must differ. This check exists because the implementation was once based on the UTC
 date, which gave users east or west of UTC the wrong verse for up to 14 hours a day.
 
-### 3.5 Flags and parsing
+### 3.6 Flags and parsing
 
 | #   | Command                                                    | Passes if                                       |
 | --- | ---------------------------------------------------------- | ----------------------------------------------- |
@@ -162,7 +178,7 @@ date, which gave users east or west of UTC the wrong verse for up to 14 hours a 
 
 #23–#26 must print **nothing** to stdout and a **one-line** message to stderr.
 
-### 3.6 Config and state
+### 3.7 Config and state
 
 ```bash
 export JESUS_CLI_DATA_DIR=$(mktemp -d)   # keep this out of your real data dir
@@ -184,7 +200,7 @@ node src/cli.js read "John 3:16"          # now (WEB) — the saved default appl
 | 29  | The state file is valid JSON                | `node -e "JSON.parse(require('fs').readFileSync('$JESUS_CLI_DATA_DIR/jesus-cli/state.json'))"` exits 0                  |
 | 30  | An invalid value is rejected                | `node src/cli.js config set translation XYZ` errors, and the file is unchanged                                          |
 
-### 3.7 Translations and the cache (needs network)
+### 3.8 Translations and the cache (needs network)
 
 ```bash
 export JESUS_CLI_DATA_DIR=$(mktemp -d)
@@ -205,7 +221,7 @@ node src/cli.js --translation WEB read "John 3:16"    # 2nd run: cached
 
 #36 is the important one: a truncated cache file must degrade, never crash.
 
-### 3.8 Error handling
+### 3.9 Error handling
 
 | #   | Command                                       | Passes if                                           |
 | --- | --------------------------------------------- | --------------------------------------------------- |

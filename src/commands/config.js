@@ -7,6 +7,7 @@ import { UsageError } from "../errors.js";
 import { printResult } from "../logger.js";
 import { save } from "../store/state.js";
 import { THEME_NAMES, normalizeTheme } from "../theme.js";
+import { printJson } from "./output.js";
 
 const SETTINGS = ["translation", "theme"];
 
@@ -56,6 +57,12 @@ export async function configCommand(context) {
   }
 
   if (action === "list") {
+    if (context.flags.json) {
+      printJson("config", {
+        settings: Object.fromEntries(SETTINGS.map((setting) => [setting, context.state[setting]])),
+      });
+      return;
+    }
     for (const setting of SETTINGS) {
       printResult(`${setting} = ${context.state[setting]}`);
     }

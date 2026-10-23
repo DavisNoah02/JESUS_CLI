@@ -94,3 +94,16 @@ export function resolveLimit(flagValue) {
 
   return limit;
 }
+
+export function resolveOffset(flagValue) {
+  if (flagValue === undefined) {
+    return 0;
+  }
+
+  const offset = Number(flagValue);
+  if (!Number.isInteger(offset) || offset < 0) {
+    throw new UsageError(`--offset must be a non-negative integer (got "${flagValue}")`);
+  }
+
+  return offset;
+}

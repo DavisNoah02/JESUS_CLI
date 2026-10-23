@@ -12,13 +12,13 @@ Canonical reference for the remaining milestones of Jesus CLI. This document is 
 | #   | Milestone                                | Status       | Depends on | Value                 |
 | --- | ---------------------------------------- | ------------ | ---------- | --------------------- |
 | M7  | Wire the layers into the CLI             | **Complete** | M1–M6      | Unlocks M8–M12        |
-| M8  | Developer-grade output                   | Planned      | M7         | High                  |
+| M8  | Developer-grade output                   | **Complete** | M7         | High                  |
 | M9  | Reference parsing and lookup quality     | Planned      | M7         | Medium                |
 | M10 | Engineering baseline (lint/format/types) | Complete     | M7         | Medium — protects M8+ |
-| M11 | Ship to npm                              | Planned      | M8, M10    | High                  |
+| M11 | Ship to npm                              | **Complete** | M8, M10    | High                  |
 | M12 | Terminal UI                              | Planned      | M7–M11     | High, but last        |
 
-> **The central insight behind this sequencing:** M1–M6 are _code-complete_ but M7 has never been done, so four finished milestones are invisible to users. M7 is not "another feature" — it is the step that converts existing work into a product. Everything after it is cheaper because the seam exists.
+> M7 wired the existing data, cache, and configuration layers into the CLI. M8 now makes that interface composable; M9 remains the next CLI milestone before the TUI.
 
 ---
 
@@ -237,7 +237,7 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 ## M8 — Developer-grade output
 
-**Status:** Planned.
+**Status:** **Complete.** Implemented and verified on 2026-10-23.
 
 **Goal:** Make the CLI composable with other tools.
 
@@ -254,10 +254,19 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 **Exit criteria**
 
-- [ ] `Jesus read "John 3:16" --json | jq -r '.verses[0].text'` works.
-- [ ] The schema is documented, with a version field.
-- [ ] `Jesus books --json` lists all 66 books with aliases.
-- [ ] `Jesus search faith --limit 5 --offset 10` paginates correctly and reports the total.
+- [x] `jesuschrist read "John 3:16" --json | jq -r '.data.verses[0].text'` works.
+- [x] The schema is documented in `docs/JSON_SCHEMA.md`, with a version field.
+- [x] `jesuschrist books --json` lists all 66 books with aliases.
+- [x] Search pagination reports total matches in the searched source.
+- [x] Plain-text output remains unchanged.
+
+### What was implemented
+
+- Versioned JSON envelopes for `read`, `search`, `random`, `today`, `books`, and `config list`; help and version also support JSON.
+- `books` lists canonical order, aliases, and chapter counts.
+- Search applies `--limit` and non-negative `--offset` and reports the total.
+- Search totals identify their scope: bundled KJV, network results, complete cache, or locally cached chapters.
+- CLI, resolver, and context tests cover JSON shapes, pagination, validation, and preserved text output.
 
 ---
 
@@ -713,8 +722,12 @@ All of them are tracked and included in the package's `files` array.
 
 **Scope**
 
-- **Re-evaluate the library first.** `blessed` is effectively unmaintained. Prefer `neo-blessed` (maintained fork) or `terminal-kit`; consider Ink if a React model fits.
+- **Use Ink.** This repository is a Node.js/ESM CLI and the maintainer is familiar with React. Ink keeps the TUI in the existing runtime and avoids a separate Rust application/build pipeline.
 - Panes: books/chapter navigator, verse reader, search, translation picker.
+- Controls: Left/Right switches panels; Up/Down scrolls; Enter selects; `/` opens search; `t` cycles four themes; `v` opens translation selection; `q` twice quits; `h`/`j`/`k`/`l` provide vi-style navigation.
+- Expand the current two-theme palette to four TUI-selectable themes; choose and document the names during M12 implementation.
+- Search uses the existing resolver: bundled KJV offline and locally cached translation data where available. The verified translation registry remains the source of truth; expand it only with verified codes rather than promising unsupported choices.
+- Add a `tui` command that mounts Ink without changing the existing text commands or their output contract.
 - Persist the reading position to `state.json` — this finally gives `bookIndex`, `chapter`, and `scrollPosition` a purpose.
 - TUI is **additive**: the plain-text commands remain the stable, scriptable interface. The TUI is never a replacement.
 

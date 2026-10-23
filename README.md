@@ -93,7 +93,12 @@ Limit search results:
 
 ```bash
 jesuschrist search faith --limit 10
+jesuschrist search faith --limit 10 --offset 10
+jesuschrist search faith --limit 10 --json
+jesuschrist books --json
 ```
+
+JSON responses use a versioned schema documented in [docs/JSON_SCHEMA.md](docs/JSON_SCHEMA.md).
 
 Check help:
 
@@ -114,6 +119,8 @@ jesuschrist --version
 | `-t, --translation <CODE>` | Translation to use (KJV, WEB, NIV, ESV, ...)   |
 | `--theme <NAME>`           | Theme to use (Slate, Midnight)                 |
 | `-n, --limit <N>`          | Maximum number of search results               |
+| `--offset <N>`             | Number of search matches to skip               |
+| `--json`                   | Output versioned machine-readable JSON         |
 | `--no-color`               | Disable colored output                         |
 | `--debug`                  | Show stack traces for errors                   |
 | `--`                       | Treat everything after this as plain arguments |
@@ -123,13 +130,15 @@ invocation only; use `config set` to change the saved default.
 
 ## Current status
 
-Milestone 11 is complete: the package is published as `jesuschrist` (`v0.1.0`). Install it
+Milestone 11 is complete: the package is published as `jesuschrist`. Install it
 with `npm install --global jesuschrist`.
 
 Working today:
 
 - `read` for single verse, verse range, and whole chapter
-- `search` for KJV text lookup, with `--limit`
+- `search` for Bible text lookup, with `--limit`, `--offset`, and total match counts
+- `--json` for read, search, random, today, books, and `config list`
+- `books` for all 66 canonical books, aliases, and chapter counts
 - `random` verse selection
 - `today` verse selection (deterministic per local calendar date)
 - `config list` / `config get` / `config set` for translation and theme
@@ -143,9 +152,8 @@ Working today:
 
 Planned next:
 
-- `--json` output for scripting
-- search pagination and total match counts
-- interactive terminal UI
+- M9 reference parsing and lookup quality
+- M12 interactive terminal UI using Ink
 - translation picker and install management
 
 ## Features
@@ -179,7 +187,7 @@ Planned next:
 - Milestone 5 — cache system — complete
 - Milestone 6 — themes — complete
 - Milestone 7 — wire the layers into the CLI — complete
-- Milestone 8 — developer-grade output (`--json`, pagination, `books`)
+- Milestone 8 — developer-grade output (`--json`, pagination, `books`) — complete
 - Milestone 9 — reference parsing and lookup quality
 - Milestone 10 — lint, format, and type-check baseline — complete
 - Milestone 11 — publish to npm — complete
