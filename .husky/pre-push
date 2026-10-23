@@ -1,0 +1,3 @@
+npm run check
+node src/cli.js --version
+npm pack --dry-run

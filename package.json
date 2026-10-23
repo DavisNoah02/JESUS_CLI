@@ -35,7 +35,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm test"
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm test",
+    "prepare": "husky"
   },
   "files": [
     "src",
@@ -50,6 +51,7 @@
     "@types/node": "^24.19.2",
     "eslint": "^10.13.0",
     "globals": "^17.13.0",
+    "husky": "^9.1.7",
     "prettier": "^3.9.10",
     "typescript": "^5.9.3"
   }

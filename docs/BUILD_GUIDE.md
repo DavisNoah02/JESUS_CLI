@@ -22,19 +22,19 @@ Verified by running the working tree. Last checked: Node v24.18.0 / npm 12.0.1.
 
 ### Working today (verified by execution)
 
-| Capability       | Command                              | Notes                                            |
-| ---------------- | ------------------------------------ | ------------------------------------------------ |
-| Single verse     | `jesuschrist read "John 3:16"`       | Offline, from bundled KJV                        |
-| Verse range      | `jesuschrist read "Psalm 23:1-6"`    | Offline                                           |
-| Whole chapter    | `jesuschrist read "John 3"`          | Offline                                           |
-| Text search      | `jesuschrist search "faith"`         | Translation-aware, default page size 50           |
-| Search page      | `jesuschrist search faith -n 5 --offset 10` | Total reported in JSON output               |
-| Book catalog     | `jesuschrist books --json`            | 66 books, aliases, chapter counts                 |
-| Random verse     | `jesuschrist random`                  | Offline for KJV                                   |
-| Verse of the day | `jesuschrist today`                   | Stable per local calendar date                   |
-| JSON output      | `jesuschrist read "John 3:16" --json` | Versioned schema in `docs/JSON_SCHEMA.md`         |
-| Configuration    | `jesuschrist config list`             | Translation and theme persist locally             |
-| Error handling   | bad reference / bad command           | stderr + exit code 1; unexpected errors exit 70  |
+| Capability       | Command                                     | Notes                                           |
+| ---------------- | ------------------------------------------- | ----------------------------------------------- |
+| Single verse     | `jesuschrist read "John 3:16"`              | Offline, from bundled KJV                       |
+| Verse range      | `jesuschrist read "Psalm 23:1-6"`           | Offline                                         |
+| Whole chapter    | `jesuschrist read "John 3"`                 | Offline                                         |
+| Text search      | `jesuschrist search "faith"`                | Translation-aware, default page size 50         |
+| Search page      | `jesuschrist search faith -n 5 --offset 10` | Total reported in JSON output                   |
+| Book catalog     | `jesuschrist books --json`                  | 66 books, aliases, chapter counts               |
+| Random verse     | `jesuschrist random`                        | Offline for KJV                                 |
+| Verse of the day | `jesuschrist today`                         | Stable per local calendar date                  |
+| JSON output      | `jesuschrist read "John 3:16" --json`       | Versioned schema in `docs/JSON_SCHEMA.md`       |
+| Configuration    | `jesuschrist config list`                   | Translation and theme persist locally           |
+| Error handling   | bad reference / bad command                 | stderr + exit code 1; unexpected errors exit 70 |
 
 ### Implemented and reachable
 
