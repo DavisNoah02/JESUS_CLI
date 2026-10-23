@@ -7,7 +7,9 @@ export async function readCommand(context) {
   const referenceValue = context.positionals.join(" ").trim();
 
   if (!referenceValue) {
-    throw new UsageError(`Usage: Jesus read <reference>  (e.g. Jesus read "John 3:16")`);
+    throw new UsageError(
+      `Usage: jesuschrist read <reference>  (e.g. jesuschrist read "John 3:16")`,
+    );
   }
 
   const reference = parseReference(referenceValue);

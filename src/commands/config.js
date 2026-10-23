@@ -10,7 +10,7 @@ import { THEME_NAMES, normalizeTheme } from "../theme.js";
 
 const SETTINGS = ["translation", "theme"];
 
-const USAGE = `Usage: Jesus config <action> [key] [value]
+const USAGE = `Usage: jesuschrist config <action> [key] [value]
 
 Actions:
   list                 Show every setting
@@ -64,7 +64,9 @@ export async function configCommand(context) {
 
   if (action === "get") {
     if (!key) {
-      throw new UsageError(`Usage: Jesus config get <key>  (keys: ${SETTINGS.join(", ")})`);
+      throw new UsageError(
+        `Usage: jesuschrist config get <key>  (keys: ${SETTINGS.join(", ")})`,
+      );
     }
     if (!SETTINGS.includes(key)) {
       throw new UsageError(`Unknown setting: ${key}. Valid settings: ${SETTINGS.join(", ")}`);
@@ -75,7 +77,9 @@ export async function configCommand(context) {
 
   if (action === "set") {
     if (!key || rest.length === 0) {
-      throw new UsageError(`Usage: Jesus config set <key> <value>  (keys: ${SETTINGS.join(", ")})`);
+      throw new UsageError(
+        `Usage: jesuschrist config set <key> <value>  (keys: ${SETTINGS.join(", ")})`,
+      );
     }
     if (!SETTINGS.includes(key)) {
       throw new UsageError(`Unknown setting: ${key}. Valid settings: ${SETTINGS.join(", ")}`);

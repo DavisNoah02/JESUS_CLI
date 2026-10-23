@@ -19,10 +19,10 @@ cut when the package is published.
 
 **Reading Scripture**
 
-- `Jesus read` — a single verse, a verse range, or a whole chapter.
-- `Jesus search` — full-text KJV search, with `--limit`.
-- `Jesus random` — a random verse.
-- `Jesus today` — the verse of the day, deterministic per local calendar date.
+- `jesuschrist read` — a single verse, a verse range, or a whole chapter (alias `jesus`).
+- `jesuschrist search` — full-text KJV search, with `--limit`.
+- `jesuschrist random` — a random verse.
+- `jesuschrist today` — the verse of the day, deterministic per local calendar date.
 - Canonical 66-book resolution with the common aliases (`Jn`, `Ps`, `1co`, …).
 
 **Translations**
@@ -37,7 +37,7 @@ cut when the package is published.
 
 **Configuration and output**
 
-- `Jesus config list` / `get` / `set` for the default translation and theme.
+- `jesuschrist config list` / `get` / `set` for the default translation and theme.
 - `--translation`, `--theme`, `--limit`, `--no-color`, `--debug`, and `--`.
 - `--translation` applies to a single invocation only; `config set` changes the saved
   default.
@@ -66,9 +66,8 @@ cut when the package is published.
 
 ### Notes
 
-- The executable is capitalised: `Jesus`. The npm package is scoped as
-  `@noah_dave/jesus-cli` because npm rejects the unscoped name as too similar to an
-  existing package. `npx @noah_dave/jesus-cli …` works if you prefer to type lowercase.
+- Package renamed to `jesuschrist` (unscoped). Both `jesuschrist` and `jesus` are
+  installed as CLI aliases. Install with `npm install --global jesuschrist`.
 - The plain-text output format is a public API. `John 3:16 - <text> (KJV)` is what
   people pipe into `grep` and `awk`, and changing it will be a breaking change.
 

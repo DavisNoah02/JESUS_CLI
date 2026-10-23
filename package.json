@@ -1,5 +1,5 @@
 {
-  "name": "@noah_dave/jesus-cli",
+  "name": "jesuschrist",
   "version": "0.1.0",
   "description": "Read the Bible in your terminal with a Node.js CLI.",
   "keywords": [
@@ -21,10 +21,8 @@
   "author": "noah_dave <m.davenoa@gmail.com>",
   "type": "module",
   "bin": {
-    "Jesus": "src/cli.js"
-  },
-  "publishConfig": {
-    "access": "public"
+    "jesus": "src/cli.js",
+    "jesuschrist": "src/cli.js"
   },
   "engines": {
     "node": ">=22"

@@ -9,7 +9,7 @@ import { load as loadState, statePath } from "./store/state.js";
 import { shouldUseColor } from "./theme.js";
 import { version } from "./version.js";
 
-const USAGE = `Usage: Jesus <command> [<reference>]
+const USAGE = `Usage: jesuschrist <command> [<reference>]
 
 Commands:
   read <reference>   Read verses (e.g. "John 3:16", "Psalm 23:1-6", "John 3")
@@ -29,10 +29,10 @@ Options:
   --                         Treat everything after this as plain arguments
 
 Examples:
-  Jesus read "John 3:16"
-  Jesus --translation WEB read "John 3:16"
-  Jesus config set translation WEB
-  Jesus search faith --limit 10`;
+  jesuschrist read "John 3:16"
+  jesuschrist --translation WEB read "John 3:16"
+  jesuschrist config set translation WEB
+  jesuschrist search faith --limit 10`;
 
 const KNOWN_ERROR_NAMES = new Set([
   "ReferenceParseError",
@@ -79,7 +79,7 @@ async function main() {
   const parsed = parseArgs(process.argv.slice(2));
 
   if (parsed.flags.version) {
-    printResult(`Jesus CLI ${version()}`);
+    printResult(`jesuschrist ${version()}`);
     return;
   }
 

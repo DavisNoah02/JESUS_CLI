@@ -8,7 +8,9 @@ export async function searchCommand(context) {
   const query = context.positionals.join(" ").trim();
 
   if (!query) {
-    throw new UsageError(`Usage: Jesus search <query>  (e.g. Jesus search "love one another")`);
+    throw new UsageError(
+      `Usage: jesuschrist search <query>  (e.g. jesuschrist search "love one another")`,
+    );
   }
 
   const results = await search(query, context.translation, context.options);

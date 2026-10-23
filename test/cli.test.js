@@ -107,7 +107,7 @@ test("search with no query fails with exit code 1", () => {
   const result = runCli("search");
   assert.equal(result.status, 1);
   assert.equal(result.stdout, "");
-  assert.match(result.stderr, /Usage: Jesus search/);
+  assert.match(result.stderr, /Usage: jesuschrist search/);
 });
 
 test("random prints a single verse and varies per run", () => {
@@ -132,14 +132,14 @@ test("--version prints a semver", () => {
   const result = runCli("--version");
   assert.equal(result.status, 0);
   assert.equal(result.stderr, "");
-  assert.match(result.stdout.trim(), /^Jesus CLI \d+\.\d+\.\d+$/);
+  assert.match(result.stdout.trim(), /^jesuschrist \d+\.\d+\.\d+$/);
 });
 
 test("--help prints usage to stdout", () => {
   const result = runCli("--help");
   assert.equal(result.status, 0);
   assert.equal(result.stderr, "");
-  assert.match(result.stdout, /^Usage: Jesus <command>/);
+  assert.match(result.stdout, /^Usage: jesuschrist <command>/);
 });
 
 test("search tolerates an early-closing pipe", () => {

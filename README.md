@@ -1,24 +1,21 @@
-# Jesus CLI
+# jesuschrist CLI
 
 A terminal-first Bible reader for developers and believers who want Scripture in the shell.
 
-Jesus CLI is a Node.js command-line app for reading the Bible from the terminal. It ships with bundled KJV data, supports fast verse lookup and search, and is designed to grow into a richer offline-first Bible experience with a TUI, translations, state, and a polished developer workflow.
+jesuschrist CLI is a Node.js command-line app for reading the Bible from the terminal. It ships with bundled KJV data, supports fast verse lookup and search, and is designed to grow into a richer offline-first Bible experience with a TUI, translations, state, and a polished developer workflow.
 
 Built with Node.js + ESM. Works offline with bundled KJV data. Planned to grow toward a rich terminal UI and translation system.
 
 ## Install
 
 ```bash
-npm install --global @noah_dave/jesus-cli
-Jesus read "John 3:16"
+npm install --global jesuschrist
+jesuschrist read "John 3:16"
 ```
 
-That is the whole contract: one global install, and the `Jesus` command is on your path.
-
-The package is scoped as `@noah_dave/jesus-cli` because npm rejects the unscoped name as
-too similar to an existing package. The **executable is capitalised** — `Jesus`, not
-`jesus`. If you would rather type it in lowercase,
-`npx @noah_dave/jesus-cli read "John 3:16"` works without installing anything.
+That is the whole contract: one global install, and the `jesuschrist` command is on your
+path. A shorter `jesus` alias is installed too. If you would rather not install anything,
+`npx jesuschrist read "John 3:16"` works as well.
 
 Requires Node.js 22 or newer.
 
@@ -44,70 +41,70 @@ package, under `docs/`.
 Read a specific verse:
 
 ```bash
-Jesus read "John 3:16"
+jesuschrist read "John 3:16"
 ```
 
 Read a chapter:
 
 ```bash
-Jesus read "Genesis 1"
+jesuschrist read "Genesis 1"
 ```
 
 Read a verse range:
 
 ```bash
-Jesus read "Psalm 23:1-6"
+jesuschrist read "Psalm 23:1-6"
 ```
 
 Search the Bible:
 
 ```bash
-Jesus search "faith"
+jesuschrist search "faith"
 ```
 
 Get a random verse:
 
 ```bash
-Jesus random
+jesuschrist random
 ```
 
 Get the verse of the day:
 
 ```bash
-Jesus today
+jesuschrist today
 ```
 
 Read in another translation (fetched from bolls.life and cached on disk):
 
 ```bash
-Jesus --translation WEB read "John 3:16"
-Jesus --translation NIV search "faith"
+jesuschrist --translation WEB read "John 3:16"
+jesuschrist --translation NIV search "faith"
 ```
 
 Change the default translation or theme:
 
 ```bash
-Jesus config set translation WEB
-Jesus config set theme Midnight
-Jesus config list
+jesuschrist config set translation WEB
+jesuschrist config set theme Midnight
+jesuschrist config list
 ```
 
 Limit search results:
 
 ```bash
-Jesus search faith --limit 10
+jesuschrist search faith --limit 10
 ```
 
 Check help:
 
 ```bash
-Jesus --help
+jesuschrist --help
 ```
 
 Check version:
 
 ```bash
-Jesus --version
+jesuschrist --version
 ```
 
 ### Options
@@ -126,8 +123,8 @@ invocation only; use `config set` to change the saved default.
 
 ## Current status
 
-Milestone 11 is complete: the package is ready for its first release, `v0.1.0`. Once that
-release is published, install it with `npm install --global @noah_dave/jesus-cli`.
+Milestone 11 is complete: the package is published as `jesuschrist` (`v0.1.0`). Install it
+with `npm install --global jesuschrist`.
 
 Working today:
 
@@ -201,7 +198,7 @@ MIT
 npm ci             # install the toolchain from the lockfile
 npm test           # 130 tests; the KJV path needs no network
 npm run check      # lint + format + type check + tests, all in one
-npm link           # link the `Jesus` command locally
+npm link           # link the `jesuschrist` command locally
 node src/cli.js --help
 ```
 
