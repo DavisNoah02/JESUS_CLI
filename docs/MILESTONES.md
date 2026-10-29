@@ -686,12 +686,13 @@ All three are resolved: see "Release preconditions" for the current evidence.
 
 ### Sequencing: what to tag, and when
 
-| Tag      | When                        | Contents                                                                                              |
-| -------- | --------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `v0.1.0` | Now, once credentials exist | The first installable release: KJV reads, search, random, today, config, themes, translations, cache. |
-| `v0.2.0` | After M8 + M9               | `--json` output, `books`, pagination, better parsing.                                                 |
-| `v0.3.0` | After M12                   | The TUI, added as a new surface. The plain-text CLI is unchanged and stays the primary surface.       |
-| `v1.0.0` | After `v0.3.0`              | Cut once the TUI has survived a release cycle and the command surface has been stable for a while.    |
+| Tag      | When                        | Contents                                                                                                                                                                                                                                  |
+| -------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v0.1.0` | Now, once credentials exist | The first installable release: KJV reads, search, random, today, config, themes, translations, cache.                                                                                                                                     |
+| `v0.2.0` | After TUI MVP (Phase 2)     | **TUI MVP** + `jesus start` (intro/onboarding), `jesus tui`, `jesus continue`, `jesus bookmark add/list/remove`, `jesus translations`, `jesus cache list/clear`, `jesus compare <ref> --translations ...`. These reuse existing services. |
+| `v0.2.1` | Hotfix after 0.2.0 only     | Bugfix release only. Do **not** skip to 0.2.1 for features.                                                                                                                                                                               |
+| `v0.3.0` | Next feature batch          | M9 reference parsing improvements and/or translation switcher (multi-version switching like NIV/ESV/NIV etc.) with docs/brainstorm.                                                                                                       |
+| `v1.0.0` | After TUI matures           | Cut once stable over a release cycle.                                                                                                                                                                                                     |
 
 `v0.1.0` is a **pre-1.0 number on purpose**: it signals that the output format and the command surface may still change, which is exactly the state of the project.
 
@@ -711,6 +712,62 @@ Before the tag, the tracked docs need to be accurate, because they ship in the t
 All of them are tracked and included in the package's `files` array.
 
 ---
+
+## Command tiers (planned)
+
+### Tier 1 — build with the TUI MVP (document now, implement after MVP)
+
+| Command                                      | Purpose                                                                                                                    |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `jesus start`                                | First-run intro/onboarding (show Bible/cross intro, short welcome, launch TUI). `jesus start` as single command preferred. |
+| `jesus tui`                                  | Launch full-screen browser                                                                                                 |
+| `jesus continue`                             | Resume last reading position                                                                                               |
+| `jesus bookmark add/list/remove`             | Save verses/locations                                                                                                      |
+| `jesus translations`                         | List available translations and descriptions                                                                               |
+| `jesus cache list/clear`                     | Inspect/manage offline cache                                                                                               |
+| `jesus compare <ref> --translations KJV,WEB` | Side-by-side translations                                                                                                  |
+
+### Tier 2 — after TUI stable (document, do not add yet)
+
+| Command                               | Purpose                         |
+| ------------------------------------- | ------------------------------- |
+| `jesus next` / `jesus prev`           | Move relative to saved position |
+| `jesus history`                       | Recently read passages          |
+| `jesus plan list/start/today`         | Reading plans                   |
+| `jesus stats`                         | Reading streaks and counts      |
+| `jesus topic <name>`                  | Curated verses by topic         |
+| `jesus export <ref> --format md/json` | Export passages                 |
+| `jesus copy <ref>`                    | Copy to clipboard               |
+| `jesus memory`                        | Memorization/flashcard mode     |
+
+## TUI implementation plan (phased)
+
+**Status:** Planned. Re-structured per product preferences.
+
+### Phase 1 — Foundation (prep)
+
+- [ ] Review existing resolver/cache/state services for TUI reuse.
+- [ ] Define TUI command surface and state shape (`readingPosition`, theme, translation).
+- [ ] Decide Ink component structure and routing.
+
+### Phase 2 — TUI MVP (foundation works)
+
+- [ ] Add `jesus tui` command (Ink app) — basic shell with panes.
+- [ ] Book/chapter navigation (browse all books/chapters).
+- [ ] Verse display pane for selected passage.
+- [ ] Persist reading position to `state.json`.
+- [ ] `jesus continue` should resume from saved position.
+- [ ] TUI must remain open when launched via `jesus read <ref>` in TUI context? Or more directly: **if user runs `jesus read john 3:16` and we route to TUI (or TUI is the viewer), the TUI must NOT quit until user presses `q` or `Esc` to exit** (label shown under displayed verse/pane).
+- [ ] Exit keys clearly labeled: `Press q or Esc to exit`.
+- [ ] Navigation keys documented (arrows/hjkl, `/` search later, etc.).
+
+### Phase 3 — Polish & features
+
+- [ ] Translation picker (`v`) with verified translations.
+- [ ] Search (`/`), theming (cycle themes).
+- [ ] Improve UX based on feedback.
+
+**Launch policy:** After Phase 2 MVP is stable, cut next version. Phase 2 is the foundation — implement incrementally across sub-phases as needed.
 
 ## M12 — Terminal UI
 
