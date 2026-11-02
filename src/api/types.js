@@ -68,7 +68,7 @@
  * @property {string} [theme]
  * @property {ResolverOptions} [options]
  * @property {(message: string) => void} [onWarn]
- * @property {object|null} [state]
+ * @property {Record<string, any>|null} [state]
  * @property {string|null} [statePath]
  */
 
@@ -78,7 +78,7 @@
  * @property {string} theme
  * @property {ResolverOptions} options
  * @property {(message: string) => void} onWarn
- * @property {object|null} state
+ * @property {Record<string, any>|null} state
  * @property {string|null} statePath
  */
 

@@ -13,6 +13,9 @@ const BOOLEAN_OPTIONS = new Map([
   ["help", "help"],
   ["version", "version"],
   ["json", "json"],
+  ["tui", "tui"],
+  ["no-tui", "no-tui"],
+  ["tui-in-place", "tui-in-place"],
 ]);
 
 const SHORT_OPTIONS = new Map([

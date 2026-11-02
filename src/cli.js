@@ -2,11 +2,12 @@
 
 import { parseArgs } from "./args.js";
 import { COMMANDS } from "./commands/index.js";
+import { maybeLaunchTui } from "./ui/launcher.js";
 import { resolveLimit, resolveOffset, resolveTheme, resolveTranslation } from "./context.js";
 import { UsageError } from "./errors.js";
 import { printError, printResult, printWarning } from "./logger.js";
 import { load as loadState, statePath } from "./store/state.js";
-import { shouldUseColor } from "./theme.js";
+import { THEME_NAMES, shouldUseColor } from "./theme.js";
 import { version } from "./version.js";
 
 const USAGE = `Usage: jesuschrist <command> [<reference>]
@@ -24,10 +25,12 @@ Commands:
 
 Options:
   -t, --translation <CODE>   Translation to use (e.g. KJV, WEB, NIV)
-      --theme <NAME>         Theme to use (Slate, Midnight)
+      --theme <NAME>         Theme to use (${THEME_NAMES.join(", ")})
   -n, --limit <N>            Maximum number of search results
       --offset <N>           Offset for paginated results
       --json                 Output machine-readable JSON
+      --tui                  Open an interactive TUI (read only, requires a TTY)
+      --no-tui               Force plain-text output even on a TTY
       --no-color             Disable colored output
       --debug                Show stack traces for errors
       --                     Treat everything after this as plain arguments
@@ -140,6 +143,7 @@ async function main() {
   }
 
   const context = await buildContext(parsed);
+  if (await maybeLaunchTui({ command, context, argv: process.argv.slice(2) })) return;
   await handler(context);
 }
 

@@ -5,6 +5,7 @@ import { NavContext } from "../context/NavContext.js";
 import { Layout } from "../components/Layout.js";
 import { BOOKS } from "../../../data/books.js";
 import { loadReadingPosition } from "../hooks/usePosition.js";
+import { colorsFor } from "../utils/theme.js";
 
 const BOOK_WINDOW = 6;
 const CHAPTERS_PER_ROW = 10;
@@ -33,9 +34,10 @@ export function BrowserView() {
   }, []);
 
   const selectedBook = BOOKS[bookIndex];
+  const colors = colorsFor(ctx.theme);
   const hint =
     pane === "books"
-      ? "↑/↓ books • Enter chapters • q quit"
+      ? "↑/↓ books • Enter chapters • / search • t theme • v translation • q quit"
       : "↑/↓ ±10 • ←/→ ±1 • Enter open • h back • q quit";
 
   useInput((input, key) => {
@@ -100,7 +102,7 @@ export function BrowserView() {
       const prefix = isSelected ? "> " : "  ";
       return React.createElement(
         Text,
-        { key: book.name, color: isSelected ? "cyan" : undefined, bold: isSelected },
+        { key: book.name, color: isSelected ? colors.accent : undefined, bold: isSelected },
         prefix + book.name,
       );
     },
@@ -114,7 +116,7 @@ export function BrowserView() {
         {
           key: number,
           color: isSelected ? "black" : undefined,
-          backgroundColor: isSelected ? "cyan" : undefined,
+          backgroundColor: isSelected ? colors.highlight : undefined,
           bold: isSelected,
         },
         `${String(number).padStart(3, " ")} `,
@@ -124,14 +126,14 @@ export function BrowserView() {
 
   return React.createElement(
     Layout,
-    { translation: ctx.translation, hint },
+    { translation: ctx.translation, theme: ctx.theme, hint },
     React.createElement(
       Box,
       { flexDirection: "column", paddingX: 1, paddingY: 1 },
       resume
         ? React.createElement(
             Text,
-            { color: "green" },
+            { color: colors.accent },
             `Continue: ${resume.book} ${resume.chapter} — press r to resume`,
           )
         : null,

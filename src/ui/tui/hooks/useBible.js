@@ -14,6 +14,7 @@ export function useBible() {
     getVerses: (book, chapter, verseStart = null, verseEnd = null) =>
       resolver.getVerses(book, chapter, verseStart, verseEnd, translation, options),
     getVerseOfTheDay: () => resolver.getVerseOfTheDay(translation, options),
+    getRandomVerse: () => resolver.getRandomVerse(translation, options),
     search: (query) => resolver.search(query, translation, options),
   };
 }

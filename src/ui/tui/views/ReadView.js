@@ -6,6 +6,7 @@ import { useBible } from "../hooks/useBible.js";
 import { Layout } from "../components/Layout.js";
 import { saveReadingPosition } from "../hooks/usePosition.js";
 import { getBook } from "../../../data/books.js";
+import { colorsFor } from "../utils/theme.js";
 
 const VISIBLE_VERSES = 20;
 
@@ -51,7 +52,8 @@ export function ReadView({ book, chapter, verseStart = null, verseEnd = null, fo
     };
   }, [book, chapter, verseStart, verseEnd, focusVerse, ctx.translation]);
 
-  const hint = "j/k scroll • [ ] chapter • b books • q quit";
+  const colors = colorsFor(ctx.theme);
+  const hint = "j/k scroll • ←/→ chapter • / search • t theme • v translation • b books • q quit";
 
   useInput((input, key) => {
     if (input === "q" || input === "Q" || key.escape) {
@@ -78,9 +80,9 @@ export function ReadView({ book, chapter, verseStart = null, verseEnd = null, fo
       setCursor((value) => Math.min(value + 1, Math.max(0, verses.length - 1)));
     } else if (key.upArrow || input === "k") {
       setCursor((value) => Math.max(value - 1, 0));
-    } else if (input === "]" && chapter < chapterCount) {
+    } else if ((input === "]" || key.rightArrow) && chapter < chapterCount) {
       nav.openPassage(book, chapter + 1);
-    } else if (input === "[" && chapter > 1) {
+    } else if ((input === "[" || key.leftArrow) && chapter > 1) {
       nav.openPassage(book, chapter - 1);
     }
   });
@@ -98,18 +100,18 @@ export function ReadView({ book, chapter, verseStart = null, verseEnd = null, fo
     const isActive = index === cursor;
     return React.createElement(
       Text,
-      { key: verse.verse, color: isActive ? "cyan" : undefined, bold: isActive },
+      { key: verse.verse, color: isActive ? colors.accent : undefined, bold: isActive },
       `${isActive ? ">" : " "} ${String(verse.verse).padStart(3, " ")} ${verse.text}`,
     );
   });
 
   return React.createElement(
     Layout,
-    { translation: ctx.translation, hint },
+    { translation: ctx.translation, theme: ctx.theme, hint },
     React.createElement(
       Box,
       { flexDirection: "column", paddingX: 1, paddingY: 1 },
-      React.createElement(Text, { bold: true }, `${book} ${chapter}`),
+      React.createElement(Text, { bold: true, color: colors.title }, `${book} ${chapter}`),
       loading ? React.createElement(Text, { dimColor: true }, "Loading…") : null,
       error ? React.createElement(Text, { color: "red" }, error) : null,
       !loading && !error

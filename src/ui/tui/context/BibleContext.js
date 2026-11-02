@@ -7,4 +7,7 @@ export const BibleContext = createContext({
   onWarn: () => {},
   state: null,
   statePath: null,
+  setTranslation: () => {},
+  setTheme: () => {},
+  cycleTheme: () => {},
 });
