@@ -7,8 +7,41 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Nothing yet. The next milestone is M8 — developer-grade output: `--json` with a
-versioned schema, a `books` command, and search pagination with a total match count.
+Milestone 12 — the terminal UI. Intended as the next minor release (`0.2.0`): it adds a
+surface without changing the existing plain-text contract.
+
+### Added
+
+**Terminal UI**
+
+- `jesuschrist start` — a full-screen Ink UI with a book list, chapter grid, and scrollable
+  verse reader.
+- `jesuschrist read "<reference>" --tui` — opens the reader directly on a TTY.
+- Automatic TUI launch: on a TTY, `read`, `search`, `random`, `today`, `books`, and bare
+  `config` open the TUI in a new tab/window of tmux, kitty, WezTerm, Konsole, or GNOME
+  Terminal, or in place when no host integration is available.
+- Random and verse-of-the-day cards, plus a config view for translation and theme with
+  `s` to persist.
+- Search pane (`/`) using the same resolver as the CLI, with jump-to-verse.
+- Translation picker (`v`) over the verified 17-code registry. Session-only, consistent
+  with the rule that selectors never write state.
+- Theme cycling (`t`) across four themes: `Slate`, `Midnight`, `Forest`, `Ember`.
+- Resume: the reading position is saved to `state.json` on exit and offered by `start`.
+- Vi-style keys: `h/j/k/l`, `g/G`, `[`/`]`, plus `Enter`, `r`, `/`, `v`, `t`, `q`/`Esc`.
+
+### Changed
+
+- `ink` and `react` are the first runtime dependencies. They are imported dynamically, so
+  plain-text commands keep the dependency-free startup path.
+- `DEFAULT_STATE` gains `readingPosition` (decision D12).
+- `read` no longer owns the TUI block; `src/ui/launcher.js` centralises launch decisions.
+- Internal `--tui-in-place` marker prevents a spawned tab from opening another tab.
+
+### Notes
+
+- The TUI is additive. On a non-TTY, with `--json`, with `--no-tui`, or with
+  `JESUS_NO_TUI=1`, output is exactly the same plain text as before.
+- Test suite: 158 tests pass.
 
 ## [0.1.0] — Unreleased
 

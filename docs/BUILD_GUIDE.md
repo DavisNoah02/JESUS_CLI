@@ -22,19 +22,22 @@ Verified by running the working tree. Last checked: Node v24.18.0 / npm 12.0.1.
 
 ### Working today (verified by execution)
 
-| Capability       | Command                                     | Notes                                           |
-| ---------------- | ------------------------------------------- | ----------------------------------------------- |
-| Single verse     | `jesuschrist read "John 3:16"`              | Offline, from bundled KJV                       |
-| Verse range      | `jesuschrist read "Psalm 23:1-6"`           | Offline                                         |
-| Whole chapter    | `jesuschrist read "John 3"`                 | Offline                                         |
-| Text search      | `jesuschrist search "faith"`                | Translation-aware, default page size 50         |
-| Search page      | `jesuschrist search faith -n 5 --offset 10` | Total reported in JSON output                   |
-| Book catalog     | `jesuschrist books --json`                  | 66 books, aliases, chapter counts               |
-| Random verse     | `jesuschrist random`                        | Offline for KJV                                 |
-| Verse of the day | `jesuschrist today`                         | Stable per local calendar date                  |
-| JSON output      | `jesuschrist read "John 3:16" --json`       | Versioned schema in `docs/JSON_SCHEMA.md`       |
-| Configuration    | `jesuschrist config list`                   | Translation and theme persist locally           |
-| Error handling   | bad reference / bad command                 | stderr + exit code 1; unexpected errors exit 70 |
+| Capability       | Command                                     | Notes                                             |
+| ---------------- | ------------------------------------------- | ------------------------------------------------- |
+| Single verse     | `jesuschrist read "John 3:16"`              | Offline, from bundled KJV                         |
+| Verse range      | `jesuschrist read "Psalm 23:1-6"`           | Offline                                           |
+| Whole chapter    | `jesuschrist read "John 3"`                 | Offline                                           |
+| Text search      | `jesuschrist search "faith"`                | Translation-aware, default page size 50           |
+| Search page      | `jesuschrist search faith -n 5 --offset 10` | Total reported in JSON output                     |
+| Book catalog     | `jesuschrist books --json`                  | 66 books, aliases, chapter counts                 |
+| Random verse     | `jesuschrist random`                        | Offline for KJV                                   |
+| Verse of the day | `jesuschrist today`                         | Stable per local calendar date                    |
+| JSON output      | `jesuschrist read "John 3:16" --json`       | Versioned schema in `docs/JSON_SCHEMA.md`         |
+| Configuration    | `jesuschrist config list`                   | Translation and theme persist locally             |
+| Error handling   | bad reference / bad command                 | stderr + exit code 1; unexpected errors exit 70   |
+| Terminal UI      | `jesuschrist start`                         | Ink browser, reader, search, translations, themes |
+| TUI on a TTY     | `jesuschrist read "John 3"`                 | New tab when supported, in-place otherwise        |
+| TUI from read    | `jesuschrist read "John 3" --tui`           | Explicit opt-in; plain text off a TTY             |
 
 ### Implemented and reachable
 
@@ -43,18 +46,18 @@ Verified by running the working tree. Last checked: Node v24.18.0 / npm 12.0.1.
 - On-disk translation cache (`src/store/cache.js`), including offline cached reads.
 - State persistence (`src/store/state.js`), configuration commands, and theme layer.
 - JSON output, books catalog, and search pagination (M8).
+- Interactive terminal UI (M12): book/chapter browser, verse reader with scrolling, search,
+  translation picker, four themes, and a resumable reading position.
 
 ### Not yet implemented
 
-- Interactive terminal UI (planned for M12 using Ink).
-- Translation picker / install management in the TUI.
 - Full-translation background downloader.
 - M9 parser improvements: compact aliases, dot separators, cross-chapter ranges, and suggestions.
 
 ### Test suite status
 
 ```
-npm run check  → lint, formatting, typecheck, and 138 tests pass
+npm run check  → lint, formatting, typecheck, and 158 tests pass
 ```
 
 Runtime is ~5–9s, dominated by the live network tests against `bolls.life`. Network tests hit `bolls.life` live and self-skip via `t.skip("bolls.life unreachable")` when a `NetworkError` is raised. A green run with skipped network tests is still a valid green run.
@@ -66,7 +69,8 @@ Runtime is ~5–9s, dominated by the live network tests against `bolls.life`. Ne
 - **Node.js >= 18** (declared in `package.json`).
 - **Recommended: Node.js >= 22.** Node 18 and 20 are both end-of-life; 22 is maintenance LTS and 24 is active LTS. CI still runs the EOL versions — see §10.
 - npm 9+ (ships with Node 18+).
-- No runtime dependencies. No database, no build step, no bundler.
+- Runtime dependencies: `ink` and `react`, used only by the TUI (M12). No database, no
+  build step, no bundler.
 - Network access is optional — required only for non-KJV translations.
 
 ---
@@ -229,9 +233,19 @@ installs nothing. Cut `v0.1.0` immediately after M11, then `v0.2.0` after M8–M
 │   │   ├── books.js          # 66-book catalog, aliases, bolls ids
 │   │   ├── kjv.js            # bundled-KJV reader, search index, random/today
 │   │   └── reference.js      # reference parser
-│   └── store/
-│       ├── cache.js          # on-disk translation cache (atomic writes)
-│       └── state.js          # persistent settings (state.json)
+│   ├── store/
+│   │   ├── cache.js          # on-disk translation cache (atomic writes)
+│   │   └── state.js          # persistent settings (state.json)
+│   └── ui/
+│       ├── index.js          # startTui(): mounts Ink with the resolved context
+│       ├── launcher.js       # auto-launch: detect host, spawn tab, fall back in place
+│       └── tui/
+│           ├── App.js        # session state, routing, global keys
+│           ├── views/        # Browser, Read, Search, TranslationPicker, VerseCard, Config
+│           ├── components/   # Layout, StatusBar
+│           ├── context/      # BibleContext, NavContext
+│           ├── hooks/        # useBible, usePosition
+│           └── utils/        # keybindings, Ink theme mapping
 ├── test/                     # node:test suites, one file per layer
 ├── .github/workflows/         # ci.yml, release.yml
 └── package.json
@@ -311,20 +325,45 @@ Default shape (`src/store/state.js:5`):
   "scrollPosition": 0,
   "activePanel": 0,
   "theme": "Slate",
-  "translation": "KJV"
+  "translation": "KJV",
+  "readingPosition": null
 }
 ```
 
 - Missing or corrupt state silently falls back to defaults.
 - Write failures are swallowed on purpose: a failed save must never crash or block the reader.
-- `bookIndex`, `chapter`, `scrollPosition`, and `activePanel` are placeholders for the future TUI.
-- **Nothing currently calls `state.save()`** — see §10.
+- `readingPosition` is written by the TUI (`{ book, chapter, verse, translation }`) on exit
+  and read by `start` to offer "continue reading" (decision D12).
+- `bookIndex`, `chapter`, `scrollPosition`, and `activePanel` remain for backward compatibility.
+- `config set` and the TUI both call `state.save()`; state is written atomically.
 
 ### 6.5 Theme and color rules
 
-- Palettes live in `src/theme.js`; `Slate` is the default, `Midnight` is the alternative.
+- Palettes live in `src/theme.js`: `Slate` (default), `Midnight`, `Forest`, and `Ember`.
+- The TUI maps those palettes onto named Ink colours in `src/ui/tui/utils/theme.js`.
 - Color is emitted only when the stream is a TTY **and** `NO_COLOR` is unset/empty **and** `TERM` is not `dumb`.
 - Piped output is always plain. Unknown style or theme names fall back to `Slate` rather than throwing.
+
+### 6.6 Terminal UI (M12)
+
+- On a TTY, every TUI-capable command (`start`, `read`, `search`, `random`, `today`,
+  `books`, and bare `config`) goes through `src/ui/launcher.js`. It detects `tmux`, kitty,
+  WezTerm, Konsole, or GNOME Terminal and spawns the same command in a new tab/window with
+  the internal `--tui-in-place` marker. When no host is detected it mounts in place, so the
+  user always gets the TUI on a TTY. A pipe, `--json`, `--no-tui`, or `JESUS_NO_TUI=1`
+  keeps the unchanged plain-text output.
+- `--tui` remains an explicit opt-in but is redundant on a TTY. `config set …` always
+  stays on the plain-text path; only bare `config` opens the settings view.
+- `src/ui/tui/App.js` owns session-only translation and theme state and routes between
+  browser, reader, search, translation picker, random/today verse cards, and config. Session
+  changes never write `state.json` (decision D4); only `config set` or `s` in the config
+  view persists, and the reading position is the one thing the reader saves on exit.
+- Ink is imported dynamically from `src/ui/index.js` (via the launcher), so plain-text
+  commands keep their dependency-free startup path. `src/cli.js` only imports the small,
+  Node-builtin-only launcher.
+- The reader windows 20 verses around a cursor and reads through the same resolver as the
+  CLI, so offline KJV, cached translations, and network fetches behave identically in both
+  surfaces.
 
 ---
 
@@ -377,7 +416,7 @@ Triggered by a `v*` tag or manual dispatch:
 
 These are the rules this project follows. Deviating from them needs a good reason in the PR description.
 
-1. **Zero runtime dependencies is a feature, not an accident.** Before adding a dependency, weigh it against the install cost for every user. The current core needs none.
+1. **Zero runtime dependencies is a feature, not an accident.** Before adding a dependency, weigh it against the install cost for every user. The plain-text core still needs none; `ink` and `react` exist solely for the TUI and are loaded dynamically (decision D11).
 2. **Typed errors, always.** `src/errors.js` defines the error vocabulary (`UsageError`, `ReferenceParseError`, `BookNotFoundError`, `VerseNotFoundError`, `CacheCorruptError`, `NetworkError`). New failure modes get a new class, not a bare `Error`.
 3. **Errors go to stderr, results go to stdout.** Exit code 1 for user errors, 0 for success. This keeps `Jesus read ... | jq` viable.
 4. **Never crash on bad input.** Corrupt cache files, corrupt state, missing books, and unreachable networks must degrade, not throw raw.
