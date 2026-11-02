@@ -1,92 +1,176 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import { BibleContext } from "../context/BibleContext.js";
+import { NavContext } from "../context/NavContext.js";
 import { Layout } from "../components/Layout.js";
-import { isExitKey } from "../utils/keybindings.js";
 import { BOOKS } from "../../../data/books.js";
-import { saveReadingPosition } from "../hooks/usePosition.js";
+import { loadReadingPosition } from "../hooks/usePosition.js";
+
+const BOOK_WINDOW = 6;
+const CHAPTERS_PER_ROW = 10;
 
 export function BrowserView() {
   const { exit } = useApp();
   const ctx = useContext(BibleContext);
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [selectedChapter, setSelectedChapter] = useState(1);
+  const nav = useContext(NavContext);
+  const [pane, setPane] = useState("books");
   const [bookIndex, setBookIndex] = useState(0);
+  const [chapter, setChapter] = useState(1);
+  const [resume, setResume] = useState(
+    /** @type {import("../../../api/types.js").ReadingPosition|null} */ (null),
+  );
 
-  const hint = "↑/↓ navigate • Enter select • q/Esc exit";
+  useEffect(() => {
+    let mounted = true;
+    loadReadingPosition()
+      .then((position) => {
+        if (mounted && position && position.book) setResume(position);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const selectedBook = BOOKS[bookIndex];
+  const hint =
+    pane === "books"
+      ? "↑/↓ books • Enter chapters • q quit"
+      : "↑/↓ ±10 • ←/→ ±1 • Enter open • h back • q quit";
 
   useInput((input, key) => {
-    if (isExitKey(input, key)) {
-      saveReadingPosition({
-        book: selectedBook?.name || BOOKS[bookIndex]?.name,
-        chapter: selectedChapter,
-        translation: ctx.translation,
-      });
+    if (input === "q" || input === "Q") {
       exit();
       return;
     }
 
-    if (!selectedBook) {
+    if (pane === "chapters" && (key.escape || key.backspace || input === "h")) {
+      setPane("books");
+      return;
+    }
+    if (key.escape) {
+      exit();
+      return;
+    }
+
+    if (pane === "books") {
       if (key.downArrow || input === "j") {
-        setBookIndex((i) => Math.min(i + 1, BOOKS.length - 1));
+        setBookIndex((index) => Math.min(index + 1, BOOKS.length - 1));
       } else if (key.upArrow || input === "k") {
-        setBookIndex((i) => Math.max(i - 1, 0));
-      } else if (key.return || input === "l" || input === " ") {
-        const book = BOOKS[bookIndex];
-        setSelectedBook(book);
-        setSelectedChapter(1);
+        setBookIndex((index) => Math.max(index - 1, 0));
+      } else if (input === "g") {
+        setBookIndex(0);
+      } else if (input === "G") {
+        setBookIndex(BOOKS.length - 1);
+      } else if (key.return || input === "l") {
+        setChapter(1);
+        setPane("chapters");
+      } else if (input === "r" && resume) {
+        nav.openPassage(resume.book, resume.chapter, null, null, resume.verse ?? null);
       }
-    } else {
-      const chapters = selectedBook.chapters || 1;
-      if (key.downArrow || input === "j") {
-        setSelectedChapter((chapter) => Math.min(chapter + 1, chapters));
-      } else if (key.upArrow || input === "k") {
-        setSelectedChapter((chapter) => Math.max(chapter - 1, 1));
-      } else if (key.leftArrow || input === "h" || key.backspace) {
-        setSelectedBook(null);
-      }
+      return;
+    }
+
+    const chapters = selectedBook.chapters;
+    if (key.downArrow || input === "j") {
+      setChapter((value) => Math.min(value + CHAPTERS_PER_ROW, chapters));
+    } else if (key.upArrow || input === "k") {
+      setChapter((value) => Math.max(value - CHAPTERS_PER_ROW, 1));
+    } else if (key.rightArrow || input === "l") {
+      setChapter((value) => Math.min(value + 1, chapters));
+    } else if (key.leftArrow) {
+      setChapter((value) => Math.max(value - 1, 1));
+    } else if (input === "g") {
+      setChapter(1);
+    } else if (input === "G") {
+      setChapter(chapters);
+    } else if (key.return || input === " ") {
+      nav.openPassage(selectedBook.name, chapter);
     }
   });
 
-  const bookSlice = BOOKS.slice(Math.max(0, bookIndex - 5), bookIndex + 6).map((book, idx) => {
-    const actualIdx = Math.max(0, bookIndex - 5) + idx;
-    const isSelected = actualIdx === bookIndex && !selectedBook;
-    return React.createElement(
-      Text,
-      { key: book.name, color: isSelected ? "cyan" : undefined },
-      (isSelected ? "> " : "  ") + book.name,
-    );
-  });
+  const windowStart = Math.max(
+    0,
+    Math.min(bookIndex - BOOK_WINDOW, BOOKS.length - (BOOK_WINDOW * 2 + 1)),
+  );
+  const bookRows = BOOKS.slice(windowStart, windowStart + BOOK_WINDOW * 2 + 1).map(
+    (book, offset) => {
+      const index = windowStart + offset;
+      const isSelected = index === bookIndex;
+      const prefix = isSelected ? "> " : "  ";
+      return React.createElement(
+        Text,
+        { key: book.name, color: isSelected ? "cyan" : undefined, bold: isSelected },
+        prefix + book.name,
+      );
+    },
+  );
+
+  const chapterCells = Array.from({ length: selectedBook.chapters }, (_, index) => index + 1).map(
+    (number) => {
+      const isSelected = number === chapter;
+      return React.createElement(
+        Text,
+        {
+          key: number,
+          color: isSelected ? "black" : undefined,
+          backgroundColor: isSelected ? "cyan" : undefined,
+          bold: isSelected,
+        },
+        `${String(number).padStart(3, " ")} `,
+      );
+    },
+  );
 
   return React.createElement(
     Layout,
     { translation: ctx.translation, hint },
     React.createElement(
       Box,
-      { flexDirection: "row", padding: 1 },
+      { flexDirection: "column", paddingX: 1, paddingY: 1 },
+      resume
+        ? React.createElement(
+            Text,
+            { color: "green" },
+            `Continue: ${resume.book} ${resume.chapter} — press r to resume`,
+          )
+        : null,
       React.createElement(
         Box,
-        { flexDirection: "column", marginRight: 2, width: 30 },
-        React.createElement(Text, { bold: true }, "Books"),
-        ...bookSlice,
+        { flexDirection: "row", marginTop: resume ? 1 : 0 },
+        React.createElement(
+          Box,
+          { flexDirection: "column", width: 30, marginRight: 2 },
+          React.createElement(Text, { bold: true }, "Books"),
+          ...bookRows,
+        ),
+        React.createElement(
+          Box,
+          { flexDirection: "column", flexGrow: 1 },
+          pane === "books"
+            ? React.createElement(Text, null, "Select a book with Enter")
+            : React.createElement(
+                Box,
+                { flexDirection: "column" },
+                React.createElement(Text, { bold: true }, selectedBook.name),
+                React.createElement(
+                  Box,
+                  {
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginTop: 1,
+                    width: CHAPTERS_PER_ROW * 4,
+                  },
+                  ...chapterCells,
+                ),
+                React.createElement(
+                  Text,
+                  { dimColor: true },
+                  `Chapter ${chapter} of ${selectedBook.chapters}`,
+                ),
+              ),
+        ),
       ),
-      selectedBook
-        ? React.createElement(
-            Box,
-            { flexDirection: "column" },
-            React.createElement(Text, { bold: true }, selectedBook.name),
-            React.createElement(Text, null, `Chapters: 1-${selectedBook.chapters}`),
-            React.createElement(
-              Text,
-              null,
-              `Selected: ${selectedChapter} (use ↑/↓, h/← to go back)`,
-            ),
-          )
-        : React.createElement(
-            Box,
-            { flexDirection: "column" },
-            React.createElement(Text, null, "Select a book with Enter"),
-          ),
     ),
   );
 }
