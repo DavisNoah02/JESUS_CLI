@@ -9,6 +9,7 @@ export const DEFAULT_STATE = Object.freeze({
   activePanel: 0,
   theme: "Slate",
   translation: "KJV",
+  readingPosition: null,
 });
 
 export const APP_DIR = "jesus-cli";

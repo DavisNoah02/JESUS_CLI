@@ -53,6 +53,36 @@
  */
 
 /**
+ * @typedef {object} ReadingPosition
+ * @property {string|null} book
+ * @property {number} chapter
+ * @property {number|null} [verse]
+ * @property {number|null} [verseStart]
+ * @property {number|null} [verseEnd]
+ * @property {string} [translation]
+ */
+
+/**
+ * @typedef {object} TuiContextInput
+ * @property {string} [translation]
+ * @property {string} [theme]
+ * @property {ResolverOptions} [options]
+ * @property {(message: string) => void} [onWarn]
+ * @property {object|null} [state]
+ * @property {string|null} [statePath]
+ */
+
+/**
+ * @typedef {object} TuiContext
+ * @property {string} translation
+ * @property {string} theme
+ * @property {ResolverOptions} options
+ * @property {(message: string) => void} onWarn
+ * @property {object|null} state
+ * @property {string|null} statePath
+ */
+
+/**
  * @typedef {object} CommandContext
  * @property {object} state persisted settings
  * @property {string} statePath path of the state file

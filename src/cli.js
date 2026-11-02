@@ -12,6 +12,7 @@ import { version } from "./version.js";
 const USAGE = `Usage: jesuschrist <command> [<reference>]
 
 Commands:
+  start              Launch the full-screen terminal UI (intro/onboarding + navigator)
   read <reference>   Read verses (e.g. "John 3:16", "Psalm 23:1-6", "John 3")
   search <query>     Search the Bible with pagination
   random             Show a random verse

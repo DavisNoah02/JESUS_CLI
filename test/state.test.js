@@ -23,6 +23,7 @@ test("round-trips settings through save and load", async () => {
     activePanel: 1,
     theme: "Midnight",
     translation: "WEB",
+    readingPosition: null,
   };
   await save(custom, { path });
   assert.deepEqual(await load({ path }), custom);
