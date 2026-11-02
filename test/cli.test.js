@@ -398,3 +398,40 @@ test("JESUS_CLI_DATA_DIR redirects the state file", async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test("help lists the start command and TUI flags", () => {
+  const result = runCli("--help");
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /start\s+Launch the full-screen terminal UI/);
+  assert.match(result.stdout, /--tui/);
+  assert.match(result.stdout, /--no-tui/);
+  assert.match(result.stdout, /Slate, Midnight, Forest, Ember/);
+});
+
+test("read --tui falls back to plain text when stdout is not a TTY", () => {
+  const plain = runCli("read", "John 3:16");
+  const withFlag = runCli("read", "John 3:16", "--tui");
+  assert.equal(withFlag.status, 0);
+  assert.equal(withFlag.stdout, plain.stdout);
+  assert.equal(withFlag.stderr, "");
+});
+
+test("--no-tui forces plain text and is accepted", () => {
+  const result = runCli("read", "John 3:16", "--no-tui");
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /^John 3:16 - .*\(KJV\)\n$/);
+});
+
+test("--json wins over --tui", () => {
+  const result = runCli("read", "John 3:16", "--tui", "--json");
+  assert.equal(result.status, 0);
+  const payload = JSON.parse(result.stdout);
+  assert.equal(payload.data.translation, "KJV");
+});
+
+test("start refuses to mount the TUI without an interactive terminal", () => {
+  const result = runCli("start");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /TUI requires an interactive terminal/);
+  assert.equal(result.stdout, "");
+});
