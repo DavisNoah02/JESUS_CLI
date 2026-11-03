@@ -42,6 +42,7 @@ export function mountCommandTui({ command, context }) {
     const value = context.positionals.join(" ").trim();
     try {
       const reference = parseReference(value);
+      if (reference.chapterEnd !== null) return false;
       startTui({
         mode: "passage",
         passage: {
@@ -49,6 +50,7 @@ export function mountCommandTui({ command, context }) {
           chapter: reference.chapter,
           verseStart: reference.verseStart,
           verseEnd: reference.verseEnd,
+          chapterEnd: reference.chapterEnd,
         },
         context,
       });

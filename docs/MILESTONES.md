@@ -13,7 +13,7 @@ Canonical reference for the remaining milestones of Jesus CLI. This document is 
 | --- | ---------------------------------------- | ------------ | ---------- | --------------------- |
 | M7  | Wire the layers into the CLI             | **Complete** | M1–M6      | Unlocks M8–M12        |
 | M8  | Developer-grade output                   | **Complete** | M7         | High                  |
-| M9  | Reference parsing and lookup quality     | Planned      | M7         | Medium                |
+| M9  | Reference parsing and lookup quality     | **Complete** | M7         | Medium                |
 | M10 | Engineering baseline (lint/format/types) | Complete     | M7         | Medium — protects M8+ |
 | M11 | Ship to npm                              | **Complete** | M8, M10    | High                  |
 | M12 | Terminal UI                              | **Complete** | M7–M11     | High, but last        |
@@ -274,25 +274,30 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 **Status:** Planned.
 
+**Status:** **Complete.** Implemented in 2026-11-02. 169 tests pass.
+
 **Goal:** Accept the references people actually type.
 
-**Why now:** Verified rejections today: `1co 13:4-7` (compact alias missing), `Jn 3.16` (dot separator), `John 3:16-4:2` (cross-chapter range), `John 3:16b` (verse suffix). Each one is a support ticket waiting to happen, and the parser is the first thing every user touches.
+**Why now:** Verified rejections today: `1co 13:4-7` (compact alias missing), `Jn 3.16` (dot separator), `John 3:16-4:2` (cross-chapter range), `John 3-4` (whole-chapter range). Each one is a support ticket waiting to happen, and the parser is the first thing every user touches.
+
+**Note:** `John 3:16b` (verse-letter suffix) is deliberately unsupported because bundled KJV and Bolls provide numbered verses only; no per-letter verse data exists. A mistyped book now suggests the closest match.
 
 **Scope**
 
 - Compact aliases: `1co`, `2co`, `1th`, `2th`, `1ti`, `2ti`, `1pe`, `2pe`, `1jn`, `2jn`, `3jn`, `1kgs`, `2kgs`, `1ch`, `2ch`, `1sa`, `2sa`, and more.
 - Accept `.` as a chapter/verse separator (`Jn 3.16`).
-- Cross-chapter ranges (`John 3:16-4:2`).
+- Cross-chapter ranges (`John 3:16-4:2`) and whole-chapter ranges (`John 3-4`).
 - Fuzzy suggestions on a failed lookup: "Did you mean 1 Corinthians?".
-- Navigation helpers: `--next` / `--previous`.
+- Navigation helpers: `--next` / `--previous` (chapter-level, from the given reference).
 
-**Out of scope:** other languages' book names (M12's problem, if it ever is one).
+**Out of scope:** other languages' book names (M12's problem, if it ever is one); verse-letter suffixes such as `John 3:16b` (no numbered-letter verse data in bundled KJV or Bolls).
 
 **Exit criteria**
 
-- [ ] Every rejection listed above now resolves correctly.
-- [ ] A failed lookup suggests the closest book within a small edit distance.
-- [ ] Cross-chapter ranges return every verse in the span, in order.
+- [x] Every rejection listed above now resolves correctly.
+- [x] A failed lookup suggests the closest book within a small edit distance.
+- [x] Cross-chapter and whole-chapter ranges return every verse in the span, in order.
+- [x] `--next` and `--previous` move by chapter from the parsed reference with clean boundary errors.
 
 ---
 

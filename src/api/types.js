@@ -1,5 +1,6 @@
 /**
  * @typedef {object} Verse
+ * @property {number} [chapter] chapter number when returned from a chapter span
  * @property {number} verse 1-based verse number
  * @property {string} text verse text
  */
@@ -19,6 +20,7 @@
  * @property {number} chapter
  * @property {number|null} verseStart
  * @property {number|null} verseEnd
+ * @property {number|null} chapterEnd last chapter of a cross-chapter range, or null
  */
 
 /**
@@ -41,6 +43,7 @@
  * @typedef {object} ResolverOptions
  * @property {number} [limit] maximum number of results for a search
  * @property {number} [offset] number of matching results to skip
+ * @property {string} [dataDir] override the cache directory (used by tests)
  * @property {(message: string) => void} [onWarn] called when the resolver
  *   substitutes a fallback, so the CLI can report it on stderr
  */

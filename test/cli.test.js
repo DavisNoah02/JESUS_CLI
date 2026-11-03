@@ -326,6 +326,7 @@ test("read --json returns structured verse data", () => {
     chapter: 3,
     verseStart: 16,
     verseEnd: 16,
+    chapterEnd: null,
   });
   assert.equal(envelope.data.translation, "KJV");
   assert.equal(envelope.data.verses[0].verse, 16);
@@ -434,4 +435,75 @@ test("start refuses to mount the TUI without an interactive terminal", () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /TUI requires an interactive terminal/);
   assert.equal(result.stdout, "");
+});
+
+test("read resolves compact aliases, dots, and cross-chapter ranges", () => {
+  const compact = runCli("read", "1co 13:4-7");
+  assert.equal(compact.status, 0);
+  assert.match(compact.stdout, /^1 Corinthians 13:4 - /);
+
+  const dotted = runCli("read", "Jn 3.16");
+  assert.equal(dotted.status, 0);
+  assert.match(dotted.stdout, /^John 3:16 - /);
+
+  const cross = runCli("read", "John 3:16-4:2");
+  assert.equal(cross.status, 0);
+  const lines = cross.stdout.trim().split("\n");
+  assert.equal(lines.length, 23);
+  assert.match(lines[0], /^John 3:16 - /);
+  assert.match(lines.at(-1) ?? "", /^John 4:2 - /);
+});
+
+test("read --json reports cross-chapter references", () => {
+  const result = runCli("read", "John 3:16-4:2", "--json");
+  const envelope = JSON.parse(result.stdout);
+
+  assert.deepEqual(envelope.data.reference, {
+    book: "John",
+    chapter: 3,
+    verseStart: 16,
+    verseEnd: 2,
+    chapterEnd: 4,
+  });
+  assert.equal(envelope.data.verses.length, 23);
+  assert.equal(envelope.data.verses.at(-1).chapter, 4);
+});
+
+test("read --next and --previous move by chapter", () => {
+  const next = runCli("read", "John 3:16", "--next");
+  assert.equal(next.status, 0);
+  assert.match(next.stdout, /^John 4:1 - /);
+
+  const previous = runCli("read", "John 3", "--previous");
+  assert.equal(previous.status, 0);
+  assert.match(previous.stdout, /^John 2:1 - /);
+
+  const json = JSON.parse(runCli("read", "John 3", "--next", "--json").stdout);
+  assert.deepEqual(json.data.reference, {
+    book: "John",
+    chapter: 4,
+    verseStart: null,
+    verseEnd: null,
+    chapterEnd: null,
+  });
+});
+
+test("read navigation flags fail cleanly at the canon boundaries", () => {
+  const start = runCli("read", "Genesis 1", "--previous");
+  assert.equal(start.status, 1);
+  assert.match(start.stderr, /Genesis has no chapter before 1/);
+
+  const end = runCli("read", "Revelation 22", "--next");
+  assert.equal(end.status, 1);
+  assert.match(end.stderr, /Revelation has no chapter after 22/);
+
+  const both = runCli("read", "John 3", "--next", "--previous");
+  assert.equal(both.status, 1);
+  assert.match(both.stderr, /either --next or --previous/);
+});
+
+test("failed book lookups suggest the closest match", () => {
+  const result = runCli("read", "Jhon 3:16");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Did you mean John\?/);
 });
