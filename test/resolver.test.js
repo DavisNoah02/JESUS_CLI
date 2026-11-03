@@ -234,3 +234,44 @@ test("a random verse in another translation falls back to KJV with a warning", a
   assert.ok(verse.text.length > 0);
   assert.ok(warnings.length >= 1);
 });
+
+test("KJV cross-chapter ranges include every verse in order", async () => {
+  const verses = await getVerses("John", 3, 16, 2, "KJV", {}, 4);
+  const last = verses.at(-1);
+  assert.equal(verses.length, 21 + 2);
+  assert.deepEqual(
+    { chapter: verses[0].chapter, verse: verses[0].verse },
+    { chapter: 3, verse: 16 },
+  );
+  assert.ok(last);
+  assert.deepEqual({ chapter: last.chapter, verse: last.verse }, { chapter: 4, verse: 2 });
+});
+
+test("KJV whole-chapter ranges return both chapters", async () => {
+  const verses = await getVerses("John", 3, null, null, "KJV", {}, 4);
+  assert.equal(verses.length, 36 + 54);
+  assert.equal(verses.filter((verse) => verse.chapter === 4).length, 54);
+});
+
+test("cached translations span chapters without a network call", async () => {
+  const dir = await newDir();
+  for (const chapter of [3, 4]) {
+    await saveChapter(
+      "WEB",
+      43,
+      chapter,
+      [
+        { verse: 1, text: `chapter ${chapter} verse 1` },
+        { verse: 2, text: `chapter ${chapter} verse 2` },
+        { verse: 3, text: `chapter ${chapter} verse 3` },
+      ],
+      { dataDir: dir },
+    );
+  }
+
+  const verses = await getVerses("John", 3, 1, 2, "WEB", { dataDir: dir }, 4);
+  assert.deepEqual(
+    verses.map((verse) => `${verse.chapter}:${verse.verse}`),
+    ["3:1", "3:2", "3:3", "4:1", "4:2"],
+  );
+});

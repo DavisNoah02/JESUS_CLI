@@ -13,6 +13,20 @@ const PALETTES = Object.freeze({
     warning: "93;1",
     accent: "94",
   }),
+  Forest: Object.freeze({
+    ref: "32;1",
+    muted: "2",
+    error: "31;1",
+    warning: "33;1",
+    accent: "92",
+  }),
+  Ember: Object.freeze({
+    ref: "33;1",
+    muted: "2",
+    error: "31;1",
+    warning: "91;1",
+    accent: "93",
+  }),
 });
 
 const DEFAULT_PALETTE = "Slate";

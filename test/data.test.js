@@ -41,19 +41,81 @@ test("parses chapter and verse references", () => {
     chapter: 3,
     verseStart: 16,
     verseEnd: 16,
+    chapterEnd: null,
   });
   assert.deepEqual(parseReference("Psalm 23:1-6"), {
     book: "Psalms",
     chapter: 23,
     verseStart: 1,
     verseEnd: 6,
+    chapterEnd: null,
   });
   assert.deepEqual(parseReference("1 Cor 13"), {
     book: "1 Corinthians",
     chapter: 13,
     verseStart: null,
     verseEnd: null,
+    chapterEnd: null,
   });
+});
+
+test("accepts compact aliases, dot separators, and space-separated verses", () => {
+  assert.equal(parseReference("1co 13:4-7").book, "1 Corinthians");
+  assert.deepEqual(parseReference("Jn 3.16"), {
+    book: "John",
+    chapter: 3,
+    verseStart: 16,
+    verseEnd: 16,
+    chapterEnd: null,
+  });
+  assert.equal(parseReference("John 3 16").verseStart, 16);
+  for (const alias of [
+    "1sa",
+    "2sa",
+    "1ch",
+    "2ch",
+    "1co",
+    "2co",
+    "1th",
+    "2th",
+    "1ti",
+    "2ti",
+    "1pe",
+    "2pe",
+    "1jn",
+    "2jn",
+    "3jn",
+    "1kgs",
+    "2kgs",
+  ]) {
+    assert.doesNotThrow(() => parseReference(`${alias} 1`), alias);
+  }
+});
+
+test("parses cross-chapter and whole-chapter ranges", () => {
+  assert.deepEqual(parseReference("John 3:16-4:2"), {
+    book: "John",
+    chapter: 3,
+    verseStart: 16,
+    verseEnd: 2,
+    chapterEnd: 4,
+  });
+  assert.deepEqual(parseReference("John 3-4"), {
+    book: "John",
+    chapter: 3,
+    verseStart: null,
+    verseEnd: null,
+    chapterEnd: 4,
+  });
+  assert.equal(parseReference("John 3:16-3:18").chapterEnd, null);
+  assert.throws(() => parseReference("John 4-3"), { name: "ReferenceParseError" });
+  assert.throws(() => parseReference("John 3:18-16"), { name: "ReferenceParseError" });
+});
+
+test("suggests the closest book for a mistyped name", () => {
+  assert.throws(() => parseReference("Jhon 3:16"), /Did you mean John\?/);
+  assert.throws(() => parseReference("1corintians 13"), /Did you mean 1 Corinthians\?/);
+  assert.throws(() => parseReference("Genesis 51"), /Genesis has 50 chapters/);
 });
 
 test("rejects out-of-range chapters", () => {

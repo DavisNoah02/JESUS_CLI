@@ -4,7 +4,7 @@ A terminal-first Bible reader for developers and believers who want Scripture in
 
 jesuschrist CLI is a Node.js command-line app for reading the Bible from the terminal. It ships with bundled KJV data, supports fast verse lookup and search, and is designed to grow into a richer offline-first Bible experience with a TUI, translations, state, and a polished developer workflow.
 
-Built with Node.js + ESM. Works offline with bundled KJV data. Planned to grow toward a rich terminal UI and translation system.
+Built with Node.js + ESM. Works offline with bundled KJV data, and ships an interactive terminal UI alongside the scriptable commands.
 
 ## Install
 
@@ -100,6 +100,44 @@ jesuschrist books --json
 
 JSON responses use a versioned schema documented in [docs/JSON_SCHEMA.md](docs/JSON_SCHEMA.md).
 
+Open the interactive terminal UI:
+
+```bash
+jesuschrist start
+```
+
+The TUI provides a book/chapter browser, a scrollable verse reader, search, a translation
+picker, and four themes. `start` resumes from your last reading position.
+
+On a supported terminal host (`tmux`, kitty, WezTerm, Konsole, GNOME Terminal), every
+TUI-capable command — `start`, `read`, `search`, `random`, `today`, `books`, and bare
+`config` — opens the TUI in a new tab/window so your shell stays usable. Elsewhere it
+mounts in place. Opt out with `--no-tui`, `--json`, a pipe, or `JESUS_NO_TUI=1`.
+
+Inside the TUI:
+
+| Key         | Action                                   |
+| ----------- | ---------------------------------------- |
+| `j` / `k`   | Move down / up (or scroll verses)        |
+| `h` / `l`   | Move between panels or chapters          |
+| `Enter`     | Open the selected book / chapter / verse |
+| `[` / `]`   | Previous / next chapter (reader)         |
+| `g` / `G`   | Jump to top / bottom                     |
+| `r`         | Resume the saved reading position        |
+| `/`         | Search                                   |
+| `v`         | Choose a translation                     |
+| `t`         | Cycle themes                             |
+| `q` / `Esc` | Exit (saves your position)               |
+
+You can also open the reader directly for a reference:
+
+```bash
+jesuschrist read "John 3" --tui
+```
+
+`--tui` is no longer required on a TTY; it remains as an explicit opt-in. On a pipe, with
+`--json`, or with `--no-tui`, the command prints plain text exactly as before.
+
 Check help:
 
 ```bash
@@ -117,10 +155,12 @@ jesuschrist --version
 | Option                     | Description                                    |
 | -------------------------- | ---------------------------------------------- |
 | `-t, --translation <CODE>` | Translation to use (KJV, WEB, NIV, ESV, ...)   |
-| `--theme <NAME>`           | Theme to use (Slate, Midnight)                 |
+| `--theme <NAME>`           | Theme to use (Slate, Midnight, Forest, Ember)  |
 | `-n, --limit <N>`          | Maximum number of search results               |
 | `--offset <N>`             | Number of search matches to skip               |
 | `--json`                   | Output versioned machine-readable JSON         |
+| `--tui`                    | Open the interactive reader (requires a TTY)   |
+| `--no-tui`                 | Force plain-text output even on a TTY          |
 | `--no-color`               | Disable colored output                         |
 | `--debug`                  | Show stack traces for errors                   |
 | `--`                       | Treat everything after this as plain arguments |
@@ -130,11 +170,15 @@ invocation only; use `config set` to change the saved default.
 
 ## Current status
 
-Milestone 11 is complete: the package is published as `jesuschrist`. Install it
-with `npm install --global jesuschrist`.
+Milestone 12 is complete: the package is published as `jesuschrist`, and the terminal UI
+ships alongside the plain-text commands. Install it with
+`npm install --global jesuschrist`.
 
 Working today:
 
+- `start` for the full-screen terminal UI (browser, reader, search, translations, themes)
+- Automatic TUI launch on a TTY for `read`, `search`, `random`, `today`, `books`, and `config` — in a new terminal tab when the host supports it
+- `read --tui` to open a reference in the reader, with automatic plain-text fallback
 - `read` for single verse, verse range, and whole chapter
 - `search` for Bible text lookup, with `--limit`, `--offset`, and total match counts
 - `--json` for read, search, random, today, books, and `config list`
@@ -153,8 +197,7 @@ Working today:
 Planned next:
 
 - M9 reference parsing and lookup quality
-- M12 interactive terminal UI using Ink
-- translation picker and install management
+- full-translation background downloads
 
 ## Features
 
@@ -167,7 +210,8 @@ Planned next:
 - Themed terminal output (state-driven theme, `NO_COLOR` aware, plain when piped)
 - Typed error hierarchy with clean stderr messages and meaningful exit codes
 - Plain-text output suitable for pipes and scripting
-- Zero-runtime-dependency core
+- Interactive TUI (Ink) that never changes the plain-text contract
+- Zero-runtime-dependency plain-text core; Ink/React load only for the TUI
 
 ## Tech
 
@@ -176,7 +220,7 @@ Planned next:
 - bundled KJV JSON (66 books, 31,102 verses)
 - Node test runner
 - Bolls.life API for additional translations
-- future TUI via a maintained terminal UI library
+- Ink + React for the terminal UI
 
 ## Roadmap
 
@@ -191,7 +235,7 @@ Planned next:
 - Milestone 9 — reference parsing and lookup quality
 - Milestone 10 — lint, format, and type-check baseline — complete
 - Milestone 11 — publish to npm — complete
-- Milestone 12 — terminal UI
+- Milestone 12 — terminal UI — complete
 
 The full roadmap, exit criteria, and known-gaps audit are maintained in the `docs/` folder,
 which ships with the package.
@@ -204,7 +248,7 @@ MIT
 
 ```bash
 npm ci             # install the toolchain from the lockfile
-npm test           # 130 tests; the KJV path needs no network
+npm test           # 158 tests; the KJV path needs no network
 npm run check      # lint + format + type check + tests, all in one
 npm link           # link the `jesuschrist` command locally
 node src/cli.js --help

@@ -13,10 +13,10 @@ Canonical reference for the remaining milestones of Jesus CLI. This document is 
 | --- | ---------------------------------------- | ------------ | ---------- | --------------------- |
 | M7  | Wire the layers into the CLI             | **Complete** | M1–M6      | Unlocks M8–M12        |
 | M8  | Developer-grade output                   | **Complete** | M7         | High                  |
-| M9  | Reference parsing and lookup quality     | Planned      | M7         | Medium                |
+| M9  | Reference parsing and lookup quality     | **Complete** | M7         | Medium                |
 | M10 | Engineering baseline (lint/format/types) | Complete     | M7         | Medium — protects M8+ |
 | M11 | Ship to npm                              | **Complete** | M8, M10    | High                  |
-| M12 | Terminal UI                              | Planned      | M7–M11     | High, but last        |
+| M12 | Terminal UI                              | **Complete** | M7–M11     | High, but last        |
 
 > M7 wired the existing data, cache, and configuration layers into the CLI. M8 now makes that interface composable; M9 remains the next CLI milestone before the TUI.
 
@@ -274,25 +274,30 @@ Network tests keep the established pattern: catch `NetworkError`, call `t.skip("
 
 **Status:** Planned.
 
+**Status:** **Complete.** Implemented in 2026-11-02. 169 tests pass.
+
 **Goal:** Accept the references people actually type.
 
-**Why now:** Verified rejections today: `1co 13:4-7` (compact alias missing), `Jn 3.16` (dot separator), `John 3:16-4:2` (cross-chapter range), `John 3:16b` (verse suffix). Each one is a support ticket waiting to happen, and the parser is the first thing every user touches.
+**Why now:** Verified rejections today: `1co 13:4-7` (compact alias missing), `Jn 3.16` (dot separator), `John 3:16-4:2` (cross-chapter range), `John 3-4` (whole-chapter range). Each one is a support ticket waiting to happen, and the parser is the first thing every user touches.
+
+**Note:** `John 3:16b` (verse-letter suffix) is deliberately unsupported because bundled KJV and Bolls provide numbered verses only; no per-letter verse data exists. A mistyped book now suggests the closest match.
 
 **Scope**
 
 - Compact aliases: `1co`, `2co`, `1th`, `2th`, `1ti`, `2ti`, `1pe`, `2pe`, `1jn`, `2jn`, `3jn`, `1kgs`, `2kgs`, `1ch`, `2ch`, `1sa`, `2sa`, and more.
 - Accept `.` as a chapter/verse separator (`Jn 3.16`).
-- Cross-chapter ranges (`John 3:16-4:2`).
+- Cross-chapter ranges (`John 3:16-4:2`) and whole-chapter ranges (`John 3-4`).
 - Fuzzy suggestions on a failed lookup: "Did you mean 1 Corinthians?".
-- Navigation helpers: `--next` / `--previous`.
+- Navigation helpers: `--next` / `--previous` (chapter-level, from the given reference).
 
-**Out of scope:** other languages' book names (M12's problem, if it ever is one).
+**Out of scope:** other languages' book names (M12's problem, if it ever is one); verse-letter suffixes such as `John 3:16b` (no numbered-letter verse data in bundled KJV or Bolls).
 
 **Exit criteria**
 
-- [ ] Every rejection listed above now resolves correctly.
-- [ ] A failed lookup suggests the closest book within a small edit distance.
-- [ ] Cross-chapter ranges return every verse in the span, in order.
+- [x] Every rejection listed above now resolves correctly.
+- [x] A failed lookup suggests the closest book within a small edit distance.
+- [x] Cross-chapter and whole-chapter ranges return every verse in the span, in order.
+- [x] `--next` and `--previous` move by chapter from the parsed reference with clean boundary errors.
 
 ---
 
@@ -771,7 +776,7 @@ All of them are tracked and included in the package's `files` array.
 
 ## M12 — Terminal UI
 
-**Status:** Planned.
+**Status:** **Complete.** Implemented and verified on 2026-11-02.
 
 **Goal:** A full-screen Bible browser — book/chapter navigation, verse pane, search, translation picker, and a remembered reading position.
 
@@ -792,9 +797,49 @@ All of them are tracked and included in the package's `files` array.
 
 **Exit criteria**
 
-- [ ] The TUI can be disabled and the CLI is fully functional without it.
-- [ ] Reading position survives a restart.
-- [ ] The plain-text output format is unchanged by the TUI's existence.
+- [x] The TUI can be disabled and the CLI is fully functional without it.
+- [x] Reading position survives a restart.
+- [x] The plain-text output format is unchanged by the TUI's existence.
+
+### What was actually built
+
+| File                                        | Change                                                                                        |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/commands/start.js`                     | **New.** `start` launches the TUI directly. Ink/React are imported dynamically.               |
+| `src/ui/index.js`                           | **New.** `startTui({ mode, passage, context })` mounts Ink; `mountCommandTui` maps a command. |
+| `src/ui/launcher.js`                        | **New.** Auto-launch on a TTY: detect host, spawn a tab, fall back in place.                  |
+| `src/ui/tui/App.js`                         | **New.** Session translation/theme, route switch, global `t`/`v`/`/` keys.                    |
+| `src/ui/tui/views/BrowserView.js`           | **New.** Book list and chapter grid; `r` resumes the saved reading position.                  |
+| `src/ui/tui/views/ReadView.js`              | **New.** Windowed verse reader with scroll, chapter navigation, and position persistence.     |
+| `src/ui/tui/views/SearchView.js`            | **New.** Incremental query entry, result list, jump to the selected verse.                    |
+| `src/ui/tui/views/TranslationPickerView.js` | **New.** Session translation picker over the verified 17-code registry.                       |
+| `src/ui/tui/views/VerseCardView.js`         | **New.** Random and verse-of-the-day cards; `n` re-rolls, `Enter` opens the reader.           |
+| `src/ui/tui/views/ConfigView.js`            | **New.** Bare `config`: translation/theme rows, `s` persists to `state.json`.                 |
+| `src/ui/tui/utils/theme.js`                 | **New.** Maps the four CLI themes onto named Ink colours; `cycleThemeName`.                   |
+| `src/ui/tui/hooks/usePosition.js`           | Reading position load/save against `state.json`.                                              |
+| `src/theme.js`                              | Added `Forest` and `Ember`, giving four selectable themes.                                    |
+| `src/args.js`                               | Added boolean `--tui` / `--no-tui` and the internal `--tui-in-place` marker.                  |
+| `src/commands/read.js`                      | TUI launch moved to the shared launcher; `--tui` remains an explicit opt-in.                  |
+| `src/cli.js`                                | Calls `maybeLaunchTui()` after `buildContext()`, before the command handler.                  |
+| `src/store/state.js`                        | `DEFAULT_STATE.readingPosition = null`.                                                       |
+
+**Keyboard map:** `j/k` (and arrows) scroll or move; `h/l` (and arrows) move between panels or
+chapters; `g/G` jump to top/bottom; `Enter` opens; `[`/`]` move chapter; `r` resumes; `/`
+opens search; `v` opens the translation picker; `t` cycles themes; `q`/`Esc` exits (position
+is saved).
+
+**Launch behaviour:** on a TTY, `start`, `read`, `search`, `random`, `today`, `books`, and
+bare `config` open the TUI in a new tab/window of a supported host (tmux, kitty, WezTerm,
+Konsole, GNOME Terminal) or in place when no host is detected. `--no-tui`, `--json`, a pipe,
+or `JESUS_NO_TUI=1` keeps the plain-text path.
+
+**Dependency note:** M12 intentionally adds `ink` and `react` as the project's first runtime
+dependencies (decision D11). Every other command keeps the zero-dependency startup path
+because `src/ui/index.js` is imported dynamically and `src/cli.js` only imports the
+Node-builtin launcher.
+
+**Test evidence:** `npm test` — 158 tests pass, including the new `test/tui.test.js` and CLI
+fallback tests. `npm run check` is green.
 
 ---
 
@@ -813,7 +858,9 @@ Decisions that shape the roadmap. Superseded decisions are struck through, not d
 | D7  | `v0.1.0` is cut immediately after M11, and `v1.0.0` waits for M12                                                                                     | Accepted                                     | Tagging before the package is installable burns a version number and can produce a release that looks green but installs nothing.                                                                                                                                                                                                                          |
 | D8  | The plain-text output format is a public API and changes only in a major release                                                                      | Accepted                                     | Users pipe it into `grep` and `awk`. Stability is worth more than cosmetic tweaks.                                                                                                                                                                                                                                                                         |
 | D9  | The executable stays `Jesus`, capitalised. No lowercase `jesus` alias                                                                                 | **Accepted — a deliberate product decision** | Many believers are called to capitalise the name of Jesus, and the command is a devotional tool, not just a developer utility. A lowercase alias would make the invocation ambiguous and weaken the intent. The npm _package_ is scoped as `@noah_dave/jesus-cli` (see D10), and `npx @noah_dave/jesus-cli …` covers anyone who prefers to type lowercase. |
-| D10 | The npm package is scoped: `@noah_dave/jesus-cli`                                                                                                     | Accepted                                     | npm rejects the unscoped name `jesus-cli` at publish as "too similar to existing package jest-cli" (typosquat protection), despite the name being unclaimed. Scoping keeps the intended name and the `Jesus` executable; the cost is a longer install command.                                                                                             |
+| D10 | The npm package is scoped: `@noah_dave/jesus-cli`                                                                                                     | Superseded by `jesuschrist`                  | The package now publishes as the unscoped `jesuschrist` (see `package.json` and npm). The historical scoping rationale is kept for context; the executable aliases are `jesus` and `jesuschrist`.                                                                                                                                                          |
+| D11 | Ink + React are the first runtime dependencies, scoped to the TUI                                                                                     | **Accepted — implemented in M12**            | M12 specifies Ink, which keeps the TUI in the existing Node/ESM runtime and avoids a second toolchain. `read` imports the UI dynamically, so plain-text commands do not pay the startup cost.                                                                                                                                                              |
+| D12 | The TUI persists one `readingPosition` object instead of overloading `bookIndex`/`scrollPosition`                                                     | **Accepted — implemented in M12**            | A single self-describing `{book, chapter, verse, translation}` record is portable across TUI revisions and avoids three fields drifting out of sync. The legacy placeholder fields remain for backward compatibility.                                                                                                                                      |
 
 ### D9 in detail — the executable name
 
@@ -869,7 +916,8 @@ Users pipe it into `grep`, `awk`, and scripts. M8's `--json` output is the _addi
 
 ## Change log
 
-| Date       | Change                                                                                                                                 |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-21 | Document created from the M7–M12 roadmap in `docs/BUILD_GUIDE.md`. Verified the Bolls translation allowlist live against `bolls.life`. |
-| 2026-10-21 | M7 implemented: 130 tests pass. D1, D2, D3, D4 resolved and implemented. Added the release guide and the tag-timing recommendation.    |
+| Date       | Change                                                                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-21 | Document created from the M7–M12 roadmap in `docs/BUILD_GUIDE.md`. Verified the Bolls translation allowlist live against `bolls.life`.                                                         |
+| 2026-10-21 | M7 implemented: 130 tests pass. D1, D2, D3, D4 resolved and implemented. Added the release guide and the tag-timing recommendation.                                                            |
+| 2026-11-02 | M12 implemented: Ink TUI with book/chapter browser, verse reader, search, translation picker, four themes, resumable position, and automatic new-tab launch on supported terminals. 158 tests. |

@@ -97,6 +97,7 @@ export async function getChapter(book, chapter, translation = "KJV", options = {
  * @param {number|null} [verseEnd] last verse, or null for the whole chapter
  * @param {string} [translation] translation code
  * @param {import("./types.js").ResolverOptions} [options] resolver options
+ * @param {number|null} [chapterEnd] last chapter for a cross-chapter range
  * @returns {Promise<import("./types.js").Verse[]>}
  */
 export async function getVerses(
@@ -106,14 +107,57 @@ export async function getVerses(
   verseEnd = null,
   translation = "KJV",
   options = {},
+  chapterEnd = null,
 ) {
   const bookInfo = resolveBook(book);
   const code = normalizeTranslation(translation);
+  const crossesChapters = chapterEnd !== null && chapterEnd !== chapter;
 
-  if (isKjv(code)) {
-    return getKjvVerses({ book: bookInfo.name, chapter, verseStart, verseEnd });
+  if (crossesChapters) {
+    assertChapterBounds(bookInfo, chapterEnd);
   }
 
+  if (isKjv(code)) {
+    if (!crossesChapters) {
+      return getKjvVerses({ book: bookInfo.name, chapter, verseStart, verseEnd });
+    }
+
+    const verses = [];
+    for (const span of chapterSpans(chapter, verseStart, verseEnd, chapterEnd)) {
+      const chapterVerses = await getKjvVerses({ book: bookInfo.name, ...span });
+      verses.push(...chapterVerses.map((verse) => ({ chapter: span.chapter, ...verse })));
+    }
+    return verses;
+  }
+
+  if (crossesChapters) {
+    const verses = [];
+    for (const span of chapterSpans(chapter, verseStart, verseEnd, chapterEnd)) {
+      verses.push(
+        ...(
+          await networkRange(bookInfo, span.chapter, span.verseStart, span.verseEnd, code, options)
+        ).map((verse) => ({ chapter: span.chapter, ...verse })),
+      );
+    }
+    return verses;
+  }
+
+  return networkRange(bookInfo, chapter, verseStart, verseEnd, code, options);
+}
+
+function chapterSpans(chapter, verseStart, verseEnd, chapterEnd) {
+  const spans = [];
+  for (let current = chapter; current <= chapterEnd; current += 1) {
+    spans.push({
+      chapter: current,
+      verseStart: current === chapter ? verseStart : null,
+      verseEnd: current === chapterEnd ? verseEnd : null,
+    });
+  }
+  return spans;
+}
+
+async function networkRange(bookInfo, chapter, verseStart, verseEnd, code, options) {
   const chapterVerses = await getChapter(bookInfo.name, chapter, code, options);
   if (chapterVerses.length === 0) {
     throw new VerseNotFoundError(`Chapter not found: ${bookInfo.name} ${chapter} (${code})`);
