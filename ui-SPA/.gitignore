@@ -1,0 +1,14 @@
+$ npm install -g jesuschrist-cli
+node_modules/
+.next/
+out/
+coverage/
+.vercel/
+
+*.log
+*.tsbuildinfo
+.DS_Store
+
+.env
+.env.*
+!.env.example
