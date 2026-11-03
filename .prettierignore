@@ -1,6 +1,7 @@
 node_modules/
 coverage/
 package-lock.json
+ui-SPA/
 
-# The bundled KJV is a 4.7 MB generated data file. Never reformat it.
+# Generated bundled Bible data.
 data/kjv.json
